@@ -34,7 +34,7 @@ public class ClientHandler implements Runnable {
             out = new ObjectOutputStream(outputStream);
 
             System.out.println("New user connected with ID: " + id);
-            server.broadcast(id);
+            //server.broadcast(id);
 
             Object data = in.readObject();
 

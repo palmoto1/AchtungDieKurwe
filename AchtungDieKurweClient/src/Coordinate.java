@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Coordinate implements Serializable {
 
@@ -41,11 +42,26 @@ public class Coordinate implements Serializable {
 
     public boolean hasCollision(Coordinate other) {
         if (other != this && isVisible() && other.isVisible()) {
-            return (x < other.getX() + SIZE &&
+            if (x < other.getX() + SIZE &&
                     x + SIZE > other.getX() &&
                     y < other.getY() + SIZE &&
-                    SIZE + y > other.getY());
+                    SIZE + y > other.getY()) {
+                System.out.println("Collision!!!");
+                System.out.println(x + " " + other.getX() + " " + y +" "+other.getY());
+                return true;}
         }
         return false;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Coordinate that)) return false;
+        return Double.compare(that.x, x) == 0 && Double.compare(that.y, y) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
     }
 }

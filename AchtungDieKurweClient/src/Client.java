@@ -84,7 +84,7 @@ public class Client extends JFrame implements Runnable {
             while (running) {
                 try {
                     Object data = in.readObject();
-                    player.add((String)data);
+                    game.addCoordinate((String)data);
                 } catch (ClassNotFoundException e) {
                     System.err.println("Error when reading data: " + e.getMessage());
                     e.printStackTrace();

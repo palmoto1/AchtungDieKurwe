@@ -1,7 +1,3 @@
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 
@@ -9,10 +5,9 @@ import java.util.Random;
 public class Player implements Runnable {
 
 
-    private static final int TRUE = 1;
-    private static final int FALSE = 0;
+    private static final int VISIBLE = 1;
+    private static final int NOT_VISIBLE = 0;
     private static final int INTERVAL = 50;
-    private static final int SIZE = 3;
     private static final int SPEED = 3;
     private static final int DIR_CHANGE = 5;
 
@@ -22,7 +17,6 @@ public class Player implements Runnable {
     private final Thread thread;
     private final Client client;
     private Coordinate head;
-    private final HashMap<Integer, ArrayList<Coordinate>> paths;
     private double direction;
 
     private int intervalCounter;
@@ -35,15 +29,21 @@ public class Player implements Runnable {
     public Player(Client client) {
         this.client = client;
         thread = new Thread(this);
-        paths = new HashMap<>();
 
     }
 
     public void start() {
         paused = false;
         active = true;
+
+        direction = Math.random() * 360;
+
+        double x = rnd.nextDouble(500);
+        double y = rnd.nextDouble(500);
+        head = new Coordinate(x, y, VISIBLE);
+
         intervalCounter = 0;
-        setNewPlayer();
+
         thread.start();
     }
 
@@ -59,19 +59,6 @@ public class Player implements Runnable {
         }
     }
 
-    public void newGame() {
-        setNewPlayer();
-
-    }
-
-    private void setNewPlayer() {
-        direction = Math.random() * 360;
-        double x = rnd.nextDouble(500);
-        double y = rnd.nextDouble(500);
-        head = new Coordinate(x, y, TRUE);
-    }
-
-
     private void move() {
         direction %= 360;
         double x = SPEED * Math.cos(Math.toRadians(direction));
@@ -83,31 +70,6 @@ public class Player implements Runnable {
         head = new Coordinate(head.getX() + x, head.getY() + y, visible);
     }
 
-
-    public void paintComponent(Graphics g) {
-
-        for (Map.Entry<Integer, ArrayList<Coordinate>> set : paths.entrySet()) {
-            ArrayList<Coordinate> path = set.getValue();
-            for (Coordinate c : path) {
-                if(c.isVisible()) {
-                    c.paint(g);
-                }
-            }
-        }
-    }
-
-    public void add(String data) {
-        String[] tokenizedData = data.split(" ");
-        int id = Integer.parseInt(tokenizedData[3]);
-        double x = Double.parseDouble(tokenizedData[0]);
-        double y = Double.parseDouble(tokenizedData[1]);
-        int visible = Integer.parseInt(tokenizedData[2]);
-        Coordinate coordinate = new Coordinate(x, y, visible);
-        if (!paths.containsKey(id)) {
-            paths.put(id, new ArrayList<>());
-        }
-        paths.get(id).add(coordinate);
-    }
 
 
     @Override
@@ -131,10 +93,10 @@ public class Player implements Runnable {
     }
 
     private int checkCoordinateVisible(){
-        int visible = TRUE;
+        int visible = VISIBLE;
 
         if (intervalCounter > INTERVAL){
-            visible = FALSE;
+            visible = NOT_VISIBLE;
             if (intervalCounter > INTERVAL+2) {
                 intervalCounter = 0;
             }
@@ -148,15 +110,7 @@ public class Player implements Runnable {
         active = false;
     }
 
-    public void checkCollision() {
-        for (Map.Entry<Integer, ArrayList<Coordinate>> set : paths.entrySet()) {
-            ArrayList<Coordinate> path = set.getValue();
-            for (Coordinate c : path) {
-                if(head.hasCollision(c)) {
-                    System.out.println("Collision!!!");
-                    //pause();
-                }
-            }
-        }
+    public boolean hasCollision(Coordinate coordinate) {
+        return head.hasCollision(coordinate);
     }
 }
