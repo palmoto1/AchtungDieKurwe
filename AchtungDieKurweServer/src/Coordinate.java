@@ -1,14 +1,11 @@
-import java.awt.*;
-import java.util.Objects;
-
 public class Coordinate {
 
 
-    private static final int LINE_SIZE = 5;
-    private static final int COLLISION_SIZE = 3;
+    private static final double COLLISION_SIZE = 1.5;
     private final double x;
     private final double y;
     private final int visible;
+
     public Coordinate(double x, double y, int visible) {
         this.x = x;
         this.y = y;
@@ -23,13 +20,8 @@ public class Coordinate {
         return y;
     }
 
-    public boolean isVisible(){
+    public boolean isVisible() {
         return visible != 0;
-    }
-
-    public void paint(Graphics g){
-        g.setColor(Color.BLUE);
-        g.fillOval((int) x, (int) y, LINE_SIZE, LINE_SIZE);
     }
 
     @Override
@@ -37,6 +29,8 @@ public class Coordinate {
         return x + " " + y + " " + visible;
     }
 
+
+    //funkar ej perfekt
     public boolean hasCollision(Coordinate other) {
         if (other != this && other.isVisible()) {
             return x < other.getX() + COLLISION_SIZE &&

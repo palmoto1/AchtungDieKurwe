@@ -2,24 +2,31 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.awt.event.KeyListener;
+import java.util.*;
+import java.util.List;
 
 public class Game extends JPanel implements Runnable {
 
-    private final Player player;
-    private final HashMap<Integer, ArrayList<Coordinate>> paths;
+    //private final Player player;
+    private final Client client;
+    //private final HashMap<Integer, ArrayList<Coordinate>> paths;
+    private final LinkedList<Coordinate> coordinates;
 
-    public Game(Player player) {
+    private String data;
+
+    public Game(Client client) {
         setBackground(Color.black);
         setForeground(Color.white);
         addKeyListener(new InputHandler());
-        paths = new HashMap<>();
-        this.player = player;
+        //paths = new HashMap<>();
+        coordinates = new LinkedList<>();
+        //this.player = player;
+        this.client = client;
+        data = "forward";
     }
 
-    public void start(){
+    public void start() {
         new Thread(this).start();
     }
 
@@ -28,7 +35,7 @@ public class Game extends JPanel implements Runnable {
         System.out.println("Starting Game!");
         while (true) {
             repaint();
-            checkCollision();
+            client.send(data);
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -41,55 +48,57 @@ public class Game extends JPanel implements Runnable {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        for (Map.Entry<Integer, ArrayList<Coordinate>> set : paths.entrySet()) {
-            ArrayList<Coordinate> path = set.getValue();
-            for (Coordinate c : path) {
-                if(c.isVisible()) {
-                    c.paint(g);
-                }
+        paintCoordinates(g);
+    }
+
+    private  void paintCoordinates(Graphics g) {
+        for (Coordinate c : coordinates) {
+            if (c.isVisible()) {
+                c.paint(g);
             }
         }
     }
 
-    public void checkCollision() {
-        for (Map.Entry<Integer, ArrayList<Coordinate>> set : paths.entrySet()) {
-            ArrayList<Coordinate> path = set.getValue();
-            for (Coordinate c : path) {
-                if(player.hasCollision(c)) {
-                    //pause();
-                }
-            }
-        }
+
+    public  void addCoordinate(String data) {
+        coordinates.add(decodeCoordinate(data));
     }
 
-    public void addCoordinate(String data) {
+    private Coordinate decodeCoordinate(String data){
         String[] tokenizedData = data.split(" ");
-        int id = Integer.parseInt(tokenizedData[3]);
         double x = Double.parseDouble(tokenizedData[0]);
         double y = Double.parseDouble(tokenizedData[1]);
         int visible = Integer.parseInt(tokenizedData[2]);
-        Coordinate coordinate = new Coordinate(x, y, visible);
-        if (!paths.containsKey(id)) {
-            paths.put(id, new ArrayList<>());
-        }
-        paths.get(id).add(coordinate);
+        return new Coordinate(x, y, visible);
     }
 
-    private class InputHandler extends KeyAdapter {
+    private class InputHandler implements KeyListener {
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+
+        }
 
         @Override
         public void keyPressed(KeyEvent e) {
-            //System.out.println(e.getKeyChar());
             switch (e.getKeyChar()) {
                 case 'a':
-                    player.setDirection("left");
+                case 'j':
+                    System.out.println("LEFT!");
+                    data = "left";
+                    //player.setDirection("left");
+                    //client.send("left");
                     break;
                 case 'd':
-                    player.setDirection("right");
+                case 'l':
+                    System.out.println("RIGHT!");
+                    data = "right";
+                    //client.send("right");
+                    //player.setDirection("right");
                     break;
                 case 'p':
 
-                    player.pause();
+                    //player.pause();
                     break;
                 case 'e':
                     System.exit(0);
@@ -97,6 +106,11 @@ public class Game extends JPanel implements Runnable {
                 default:
                     break;
             }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            data = "forward";
         }
     }
 

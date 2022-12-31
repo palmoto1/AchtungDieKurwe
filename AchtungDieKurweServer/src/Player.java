@@ -16,7 +16,8 @@ public class Player implements Runnable {
 
 
     private final Thread thread;
-    private final Client client;
+    private final PlayerHandler playerHandler;
+
     private final int id;
     private Coordinate head;
     private double direction;
@@ -27,8 +28,8 @@ public class Player implements Runnable {
     private boolean active;
 
 
-    public Player(Client client, int id) {
-        this.client = client;
+    public Player(PlayerHandler playerHandler, int id) {
+        this.playerHandler = playerHandler;
         this.id = id;
         thread = new Thread(this);
 
@@ -57,30 +58,33 @@ public class Player implements Runnable {
     public void setDirection(String command) {
         if (command.equals("left")) {
             direction -= DIR_CHANGE + 360;
-        } else {
+        } else if (command.equals("right")) {
             direction += DIR_CHANGE;
         }
     }
 
-    private void move() {
+    public void update() {
         direction %= 360;
         double x = SPEED * Math.cos(Math.toRadians(direction));
         double y = SPEED * Math.sin(Math.toRadians(direction));
-        client.send(head.toString());
+        //playerHandler.broadcast(head);
 
         int visible = checkCoordinateVisible();
 
         head = new Coordinate(head.getX() + x, head.getY() + y, visible);
+
     }
 
+    public Coordinate getHead() {
+        return head;
+    }
 
-
-    @Override
+    //@Override
     public void run() {
         System.out.println("Starting player!");
         while (active) {
             while (!paused) {
-                move();
+                update();
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {

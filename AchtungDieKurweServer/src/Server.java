@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
 
@@ -15,14 +16,17 @@ public class Server implements Runnable {
     private final int port;
 
     private boolean running;
-    private ArrayBlockingQueue<ClientHandler> clientHandlers; //lägg i adapter klass
+    private ArrayBlockingQueue<PlayerHandler> playerHandlers; //lägg i adapter klass
+    private ArrayList<Coordinate> coordinates;
     private int capacity;
 
     public Server(int port) {
-        this.thread = new Thread(this);
+        thread = new Thread(this);
         this.port = port;
-        this.capacity = 10;
-        this.clientHandlers = new ArrayBlockingQueue<>(capacity);
+        capacity = 10;
+        playerHandlers = new ArrayBlockingQueue<>(capacity);
+        coordinates = new ArrayList<>();
+
     }
 
     public Server() {
@@ -46,7 +50,7 @@ public class Server implements Runnable {
             while (running) {
                 Socket socket = serverSocket.accept();
                 System.out.println("Connecting new user!");
-                addThread(new ClientHandler(socket, this));
+                addThread(new PlayerHandler(socket, this));
                 Thread.sleep(100);
 
             }
@@ -61,30 +65,52 @@ public class Server implements Runnable {
 
 
     public synchronized void broadcast(Object data) {
-        for (ClientHandler ch : clientHandlers) {
+        for (PlayerHandler ch : playerHandlers) {
             ch.writeData(data);
         }
     }
 
-    public synchronized void removeThread(ClientHandler clientHandler) {
-        if (clientHandlers.remove(clientHandler)) {
-            System.out.println("Player with id: " + clientHandler.getId() + " quit");
+    public synchronized void removeThread(PlayerHandler playerHandler) {
+        if (playerHandlers.remove(playerHandler)) {
+            System.out.println("Player with id: " + playerHandler.getId() + " quit");
         }
     }
 
-    public synchronized void addThread(ClientHandler clientHandler) {
+    public synchronized void addThread(PlayerHandler playerHandler) {
 
-        if (clientHandlers.size() == capacity) {
+        if (playerHandlers.size() == capacity) {
             increaseCapacity();
         }
-        clientHandlers.add(clientHandler);
+        playerHandlers.add(playerHandler);
 
+    }
+
+    public boolean hasCollision (Coordinate coordinate) {
+        /*for (Map.Entry<Integer, ArrayList<Coordinate>> set : paths.entrySet()) {
+            ArrayList<Coordinate> path = set.getValue();
+            for (int i = 1 ; i < path.size(); i++) {
+                if(player.hasCollision(path.get(i))) {
+                    player.pause();
+                }
+            }
+        }*/
+        for (int i = 1; i < coordinates.size(); i++) {
+            if (coordinate.hasCollision(coordinates.get(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void addCoordinate (Coordinate coordinate) {
+
+        coordinates.add(coordinate);
     }
 
     private void increaseCapacity() {
         capacity *= 2;
-        ArrayBlockingQueue<ClientHandler> copy = new ArrayBlockingQueue<>(capacity);
-        copy.addAll(clientHandlers);
-        clientHandlers = copy;
+        ArrayBlockingQueue<PlayerHandler> copy = new ArrayBlockingQueue<>(capacity);
+        copy.addAll(playerHandlers);
+        playerHandlers = copy;
     }
 }

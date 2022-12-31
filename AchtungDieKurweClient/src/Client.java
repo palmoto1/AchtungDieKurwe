@@ -5,8 +5,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-//TODO: förenkla till en klient klass istället
-
 public class Client extends JFrame implements Runnable {
 
     private static final int DEFAULT_PORT = 2000;
@@ -23,11 +21,11 @@ public class Client extends JFrame implements Runnable {
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
-    private Player player;
+    //private Player player;
+
     private Game game;
 
     private boolean running;
-
 
 
     public Client(String host, int port) {
@@ -44,20 +42,21 @@ public class Client extends JFrame implements Runnable {
     }
 
 
-    public void start(){
-        try{
+    public void start() {
+        try {
             socket = new Socket(host, port);
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
-            player = new Player(this);
-            game = new Game(player);
+            //int playerId = (int) in.readObject();
+            //player = new Player(this, playerId);
+            game = new Game(this);
             running = true;
             loadWindow();
-            player.start();
+           // player.start();
             game.start();
             new Thread(this).start();
 
-        }catch (UnknownHostException ex) {
+        } catch (UnknownHostException ex) {
             System.out.println("Server not found: " + ex.getMessage());
             ex.printStackTrace();
         } catch (IOException ioException) {
@@ -66,7 +65,7 @@ public class Client extends JFrame implements Runnable {
         }
     }
 
-    public void send(Object packet){
+    public void send(Object packet) {
         try {
             out.writeObject(packet);
             out.flush();
@@ -83,11 +82,16 @@ public class Client extends JFrame implements Runnable {
         try {
             while (running) {
                 try {
-                    Object data = in.readObject();
-                    game.addCoordinate((String)data);
+                    Object data = in.readObject(); //här fastnar vi
+
+                    game.addCoordinate((String) data);
+
+                    Thread.sleep(100);
                 } catch (ClassNotFoundException e) {
                     System.err.println("Error when reading data: " + e.getMessage());
                     e.printStackTrace();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
 
             }
@@ -98,8 +102,6 @@ public class Client extends JFrame implements Runnable {
 
         }
     }
-
-
 
 
     public void loadWindow() {
@@ -121,10 +123,6 @@ public class Client extends JFrame implements Runnable {
         }
     }
 }
-
-
-
-
 
 
 //TODO: kan nog dela upp i Sender och Receiver som i 2.1
