@@ -5,26 +5,29 @@ import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
 
-//TODO: write comments, dela upp i två delar o anpassa för det, dela upp metoder mer t.ex. fixa loopar med sleep o kill
+//TODO: byt till UDP för att se om det går snabbare, eller kör via clienten igen
 
 public class Server implements Runnable {
 
 
     private static final int DEFAULT_PORT = 2000;
 
+    private static int NextID = 0;
+    private static int NextColorID = 0;
+
     private final Thread thread;
     private final int port;
 
     private boolean running;
-    private ArrayBlockingQueue<PlayerHandler> playerHandlers; //lägg i adapter klass
-    private ArrayList<Coordinate> coordinates;
+    private ArrayBlockingQueue<PlayerHandler> players; //lägg i adapter klass
+    private final ArrayList<Coordinate> coordinates;
     private int capacity;
 
     public Server(int port) {
         thread = new Thread(this);
         this.port = port;
         capacity = 10;
-        playerHandlers = new ArrayBlockingQueue<>(capacity);
+        players = new ArrayBlockingQueue<>(capacity);
         coordinates = new ArrayList<>();
 
     }
@@ -50,7 +53,7 @@ public class Server implements Runnable {
             while (running) {
                 Socket socket = serverSocket.accept();
                 System.out.println("Connecting new user!");
-                addThread(new PlayerHandler(socket, this));
+                addThread(new PlayerHandler(NextID++, NextColorID++, socket, this));
                 Thread.sleep(100);
 
             }
@@ -65,35 +68,28 @@ public class Server implements Runnable {
 
 
     public synchronized void broadcast(Object data) {
-        for (PlayerHandler ch : playerHandlers) {
+        for (PlayerHandler ch : players) {
             ch.writeData(data);
         }
     }
 
     public synchronized void removeThread(PlayerHandler playerHandler) {
-        if (playerHandlers.remove(playerHandler)) {
+        if (players.remove(playerHandler)) {
             System.out.println("Player with id: " + playerHandler.getId() + " quit");
+            NextColorID--;
         }
     }
 
     public synchronized void addThread(PlayerHandler playerHandler) {
 
-        if (playerHandlers.size() == capacity) {
+        if (players.size() == capacity) {
             increaseCapacity();
         }
-        playerHandlers.add(playerHandler);
+        players.add(playerHandler);
 
     }
 
     public boolean hasCollision (Coordinate coordinate) {
-        /*for (Map.Entry<Integer, ArrayList<Coordinate>> set : paths.entrySet()) {
-            ArrayList<Coordinate> path = set.getValue();
-            for (int i = 1 ; i < path.size(); i++) {
-                if(player.hasCollision(path.get(i))) {
-                    player.pause();
-                }
-            }
-        }*/
         for (int i = 1; i < coordinates.size(); i++) {
             if (coordinate.hasCollision(coordinates.get(i))) {
                 return true;
@@ -107,10 +103,14 @@ public class Server implements Runnable {
         coordinates.add(coordinate);
     }
 
+    public int getNumberOfPlayers(){
+        return players.size();
+    }
+
     private void increaseCapacity() {
         capacity *= 2;
         ArrayBlockingQueue<PlayerHandler> copy = new ArrayBlockingQueue<>(capacity);
-        copy.addAll(playerHandlers);
-        playerHandlers = copy;
+        copy.addAll(players);
+        players = copy;
     }
 }

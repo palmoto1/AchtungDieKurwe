@@ -5,20 +5,19 @@ import java.util.Random;
 public class Player implements Runnable {
 
 
-    //FLYTTA HELA TILL SERVER
+    private static final int TURN_LEFT = 1;
+    private static final int TURN_RIGHT = 2;
     private static final int VISIBLE = 1;
     private static final int NOT_VISIBLE = 0;
     private static final int INTERVAL = 50;
     private static final int SPEED = 3;
-    private static final int DIR_CHANGE = 5;
+    private static final int DIR_CHANGE = 2;
 
     private static final Random rnd = new Random();
 
 
     private final Thread thread;
-    private final PlayerHandler playerHandler;
-
-    private final int id;
+    private int colorId;
     private Coordinate head;
     private double direction;
     private int intervalCounter;
@@ -28,9 +27,8 @@ public class Player implements Runnable {
     private boolean active;
 
 
-    public Player(PlayerHandler playerHandler, int id) {
-        this.playerHandler = playerHandler;
-        this.id = id;
+    public Player(int colorId) {
+        this.colorId = colorId;
         thread = new Thread(this);
 
     }
@@ -43,7 +41,7 @@ public class Player implements Runnable {
 
         double x = rnd.nextDouble(500);
         double y = rnd.nextDouble(500);
-        head = new Coordinate(x, y, VISIBLE);
+        head = new Coordinate(x, y, VISIBLE, colorId);
 
         intervalCounter = 0;
 
@@ -55,10 +53,11 @@ public class Player implements Runnable {
         paused = true;
     }
 
-    public void setDirection(String command) {
-        if (command.equals("left")) {
+    public void setDirection(int command) {
+        //int command = Integer.parseInt(data);
+        if (command == TURN_LEFT) {
             direction -= DIR_CHANGE + 360;
-        } else if (command.equals("right")) {
+        } else if (command == TURN_RIGHT) {
             direction += DIR_CHANGE;
         }
     }
@@ -67,11 +66,10 @@ public class Player implements Runnable {
         direction %= 360;
         double x = SPEED * Math.cos(Math.toRadians(direction));
         double y = SPEED * Math.sin(Math.toRadians(direction));
-        //playerHandler.broadcast(head);
 
         int visible = checkCoordinateVisible();
 
-        head = new Coordinate(head.getX() + x, head.getY() + y, visible);
+        head = new Coordinate(head.getX() + x, head.getY() + y, visible, colorId);
 
     }
 
@@ -86,7 +84,7 @@ public class Player implements Runnable {
             while (!paused) {
                 update();
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -104,7 +102,7 @@ public class Player implements Runnable {
 
         if (intervalCounter > INTERVAL){
             visible = NOT_VISIBLE;
-            if (intervalCounter > INTERVAL+2) {
+            if (intervalCounter > INTERVAL + 2) {
                 intervalCounter = 0;
             }
         }

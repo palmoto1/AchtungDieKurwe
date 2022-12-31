@@ -1,29 +1,27 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.*;
-import java.util.List;
+import java.util.LinkedList;
 
 public class Game extends JPanel implements Runnable {
 
-    //private final Player player;
-    private final Client client;
-    //private final HashMap<Integer, ArrayList<Coordinate>> paths;
-    private final LinkedList<Coordinate> coordinates;
+    private static final int MOVE_FORWARD = 0;
+    private static final int TURN_LEFT = 1;
+    private static final int TURN_RIGHT = 2;
 
-    private String data;
+
+    private final Client client;
+    private final LinkedList<Coordinate> coordinates;
+    private int command;
 
     public Game(Client client) {
         setBackground(Color.black);
         setForeground(Color.white);
         addKeyListener(new InputHandler());
-        //paths = new HashMap<>();
         coordinates = new LinkedList<>();
-        //this.player = player;
         this.client = client;
-        data = "forward";
+        command = MOVE_FORWARD;
     }
 
     public void start() {
@@ -35,9 +33,9 @@ public class Game extends JPanel implements Runnable {
         System.out.println("Starting Game!");
         while (true) {
             repaint();
-            client.send(data);
+            client.send(command);
             try {
-                Thread.sleep(100);
+                Thread.sleep(5);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -51,7 +49,7 @@ public class Game extends JPanel implements Runnable {
         paintCoordinates(g);
     }
 
-    private  void paintCoordinates(Graphics g) {
+    private synchronized void paintCoordinates(Graphics g) {
         for (Coordinate c : coordinates) {
             if (c.isVisible()) {
                 c.paint(g);
@@ -60,8 +58,9 @@ public class Game extends JPanel implements Runnable {
     }
 
 
-    public  void addCoordinate(String data) {
-        coordinates.add(decodeCoordinate(data));
+    public synchronized void addCoordinate(String data) {
+        Coordinate coordinate = decodeCoordinate(data);
+        coordinates.add(coordinate);
     }
 
     private Coordinate decodeCoordinate(String data){
@@ -69,7 +68,8 @@ public class Game extends JPanel implements Runnable {
         double x = Double.parseDouble(tokenizedData[0]);
         double y = Double.parseDouble(tokenizedData[1]);
         int visible = Integer.parseInt(tokenizedData[2]);
-        return new Coordinate(x, y, visible);
+        int colorId = Integer.parseInt(tokenizedData[3]);
+        return new Coordinate(x, y, visible, colorId);
     }
 
     private class InputHandler implements KeyListener {
@@ -85,20 +85,12 @@ public class Game extends JPanel implements Runnable {
                 case 'a':
                 case 'j':
                     System.out.println("LEFT!");
-                    data = "left";
-                    //player.setDirection("left");
-                    //client.send("left");
+                    command = TURN_LEFT;
                     break;
                 case 'd':
                 case 'l':
                     System.out.println("RIGHT!");
-                    data = "right";
-                    //client.send("right");
-                    //player.setDirection("right");
-                    break;
-                case 'p':
-
-                    //player.pause();
+                    command = TURN_RIGHT;
                     break;
                 case 'e':
                     System.exit(0);
@@ -110,7 +102,7 @@ public class Game extends JPanel implements Runnable {
 
         @Override
         public void keyReleased(KeyEvent e) {
-            data = "forward";
+            command = MOVE_FORWARD;
         }
     }
 
