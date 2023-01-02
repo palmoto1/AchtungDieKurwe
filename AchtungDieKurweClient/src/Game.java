@@ -9,29 +9,38 @@ public class Game extends JPanel implements Runnable {
     private static final int MOVE_FORWARD = 0;
     private static final int TURN_LEFT = 1;
     private static final int TURN_RIGHT = 2;
+    private static final int READY = 10;
+
 
 
     private final Client client;
+    private final GUI gui;
     private final LinkedList<Coordinate> coordinates;
     private int command;
+    private boolean running;
 
     public Game(Client client) {
         setBackground(Color.black);
         setForeground(Color.white);
         addKeyListener(new InputHandler());
+        gui = new GUI(this);
+
         coordinates = new LinkedList<>();
         this.client = client;
         command = MOVE_FORWARD;
     }
 
+
+
     public void start() {
+        running = true;
         new Thread(this).start();
     }
 
     @Override
     public void run() {
         System.out.println("Starting Game!");
-        while (true) {
+        while (running) {
             repaint();
             client.send(command);
             try {
@@ -49,7 +58,7 @@ public class Game extends JPanel implements Runnable {
         paintCoordinates(g);
     }
 
-    private synchronized void paintCoordinates(Graphics g) {
+    public synchronized void paintCoordinates(Graphics g) {
         for (Coordinate c : coordinates) {
             if (c.isVisible()) {
                 c.paint(g);
@@ -72,8 +81,8 @@ public class Game extends JPanel implements Runnable {
         return new Coordinate(x, y, visible, colorId);
     }
 
-    public int getCommand() {
-        return command;
+    public void setCommand(int command) {
+        this.command = command;
     }
 
     private class InputHandler implements KeyListener {
@@ -98,7 +107,7 @@ public class Game extends JPanel implements Runnable {
                     break;
                 case 'r':
                     System.out.println("READY!");
-                    command = 10;
+                    command = READY;
                     break;
                 case 'e':
                     System.exit(0);

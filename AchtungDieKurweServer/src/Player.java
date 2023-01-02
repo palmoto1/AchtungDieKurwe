@@ -53,6 +53,10 @@ public class Player implements Runnable {
         paused = true;
     }
 
+    public boolean isPaused() {
+        return paused;
+    }
+
     public void setDirection(int command) {
         //int command = Integer.parseInt(data);
         if (command == TURN_LEFT) {

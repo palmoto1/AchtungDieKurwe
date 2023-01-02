@@ -35,7 +35,7 @@ public class Coordinate {
 
     //funkar ej perfekt men OK
     public boolean hasCollision(Coordinate other) {
-        if (other != this && other.isVisible()) {
+        if (other != null && other != this && other.isVisible()) {
             return x < other.getX() + SIZE &&
                     x + SIZE > other.getX() &&
                     y < other.getY() + SIZE &&

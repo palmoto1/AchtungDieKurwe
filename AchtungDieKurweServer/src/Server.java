@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
 
-//TODO: byt till UDP för att se om det går snabbare, eller kör via clienten igen
+
 
 public class Server implements Runnable {
 
@@ -66,6 +66,12 @@ public class Server implements Runnable {
         }
     }
 
+    private synchronized void startGame() {
+        for (PlayerHandler ch : players) {
+            ch.start();
+        }
+    }
+
 
     public synchronized void broadcast(Object data) {
         for (PlayerHandler ch : players) {
@@ -84,6 +90,9 @@ public class Server implements Runnable {
     public synchronized void removeThread(PlayerHandler playerHandler) {
         if (players.remove(playerHandler)) {
             System.out.println("Player with id: " + playerHandler.getId() + " quit");
+            if (players.isEmpty()) {
+                coordinates.clear();
+            }
             NextColorID--;
         }
     }

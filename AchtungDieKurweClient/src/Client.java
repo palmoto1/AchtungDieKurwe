@@ -5,15 +5,10 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class Client extends JFrame implements Runnable {
+public class Client implements Runnable {
 
     private static final int DEFAULT_PORT = 2000;
     private static final String DEFAULT_HOST = "127.0.0.1";
-
-    private static final int WIDTH = 500;
-
-    private static final int HEIGHT = 500;
-
     private final String host;
     private final int port;
 
@@ -47,7 +42,6 @@ public class Client extends JFrame implements Runnable {
 
             game = new Game(this);
             running = true;
-            loadWindow();
 
             game.start();
             new Thread(this).start();
@@ -83,34 +77,25 @@ public class Client extends JFrame implements Runnable {
 
                     game.addCoordinate((String) data);
 
-                    //Thread.sleep(50);
+
                 } catch (ClassNotFoundException e) {
                     System.err.println("Error when reading data: " + e.getMessage());
                     e.printStackTrace();
-                } /*catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }*/
+                }
 
             }
         } catch (IOException e) {
             System.err.println("I/O error when reading data: " + e.getMessage());
             e.printStackTrace();
+            //System.exit(0);
 
 
         }
     }
 
-
-    public void loadWindow() {
-        getContentPane().add(game);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(WIDTH, HEIGHT);
-        setVisible(true);
-        game.setFocusable(true);
-    }
-
     public void kill() {
         try {
+            running = false;
             in.close();
             out.close();
             socket.close();

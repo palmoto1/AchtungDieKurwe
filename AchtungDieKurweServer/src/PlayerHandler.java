@@ -2,8 +2,11 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 
+//TODO: fixa GUIn och skicka states
 
 public class PlayerHandler implements Runnable {
+
+    private static final int READY = 10;
 
 
     private final Thread thread;
@@ -23,10 +26,11 @@ public class PlayerHandler implements Runnable {
         this.socket = socket;
         this.server = server;
         thread = new Thread(this);
-        start();
+
+        initialize();
     }
 
-    private void start(){
+    private void initialize(){
         try {
             InputStream inputStream = socket.getInputStream();
             in = new ObjectInputStream(inputStream);
@@ -40,7 +44,6 @@ public class PlayerHandler implements Runnable {
 
             player = new Player(colorId);
 
-
             thread.start();
         } catch (IOException ioException) {
             System.err.println("Error when initializing socket streams: " + ioException.getMessage());
@@ -48,73 +51,80 @@ public class PlayerHandler implements Runnable {
         }
     }
 
+    public void start(){
+        thread.start();
+    }
+
     // dela upp
     @Override
     public void run() {
         try {
 
-            addCoordinate(player.getHead()); //write start point
+            waitForPlayers();
 
-            waitForPlayersToJoin();
-
-            System.out.println("All players ready! Activating players!");
             player.start();
 
             Object data = in.readObject();
-
             while (data != null) {
 
                 player.setDirection((int)data);
                 addCoordinate(player.getHead());
                 data = in.readObject();
-                //Thread.sleep(50);
             }
 
             in.close();
+            out.close();
             socket.close();
 
 
         } catch (SocketException socketException) {
             System.out.println("User connection lost!");
             //socketException.printStackTrace();
-        } catch (IOException ioException) {
-            System.err.println("User error: " + ioException.getMessage());
-            ioException.printStackTrace();
-       // } catch (InterruptedException e) {
-      //      Thread.currentThread().interrupt();
+        } catch (IOException e) {
+            System.err.println("Error reading input: " + e.getMessage());
+            e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            System.err.println("Data of class not found: " + e.getMessage());
+            System.err.println("Class not found: " + e.getMessage());
             e.printStackTrace();
         }
 
         server.removeThread(this);
-        System.out.println("User with ID: " + id + " has quit!");
 
     }
 
-    private void waitForPlayersToJoin() {
+    private void waitForPlayers() {
 
         try {
-            System.out.println("Waiting for more players!");
-            while (server.getNumberOfPlayers() != 2) {
+            // should be sent
+            System.out.println("Waiting for more players to connect!");
+            addCoordinate(player.getHead()); //write start point
+
+            while (server.getNumberOfPlayers() < 2) {
+                in.readObject();
                 Thread.sleep(25);
             }
+            System.out.println(server.getNumberOfPlayers());
 
-            server.clearCoordinates();
-            addCoordinate(player.getHead());
+            addCoordinate(player.getHead()); //refresh start point so that it is visible to newly connected players
 
-            Object data;
             while (!server.allPlayersReady()) {
                 if (!ready) {
-                    data = in.readObject();
-                    if ((int) data == 10) {
+                    if ((int)in.readObject() == READY) {
+
+                        // should be sent
                         System.out.println("User with ID: " + id + " is ready!");
                         ready = true;
                     }
                 }
             }
-        } catch (InterruptedException | IOException | ClassNotFoundException e) {
+
+            //should be sent
+            System.out.println("All players ready! Activating players!");
+
+        } catch (IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -137,8 +147,8 @@ public class PlayerHandler implements Runnable {
     }
 
     private void addCoordinate(Coordinate coordinate){
-        if (server.hasCollision(coordinate)){
-            //System.out.println("Collision");
+        if (server.hasCollision(coordinate) && !player.isPaused()){
+            System.out.println("Collision");
             player.pause();
         }
         server.addCoordinate(coordinate);
