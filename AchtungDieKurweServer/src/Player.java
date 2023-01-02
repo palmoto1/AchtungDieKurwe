@@ -29,11 +29,6 @@ public class Player implements Runnable {
 
     public Player(int colorId) {
         this.colorId = colorId;
-        thread = new Thread(this);
-
-    }
-
-    public void start() {
         paused = false;
         active = true;
 
@@ -44,7 +39,12 @@ public class Player implements Runnable {
         head = new Coordinate(x, y, VISIBLE, colorId);
 
         intervalCounter = 0;
+        thread = new Thread(this);
 
+    }
+
+
+    public void start() {
         thread.start();
     }
 

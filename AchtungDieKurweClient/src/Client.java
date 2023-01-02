@@ -76,6 +76,7 @@ public class Client extends JFrame implements Runnable {
 
         System.out.println("Client is listening");
         try {
+
             while (running) {
                 try {
                     Object data = in.readObject();

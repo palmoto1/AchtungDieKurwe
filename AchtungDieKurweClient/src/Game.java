@@ -72,6 +72,10 @@ public class Game extends JPanel implements Runnable {
         return new Coordinate(x, y, visible, colorId);
     }
 
+    public int getCommand() {
+        return command;
+    }
+
     private class InputHandler implements KeyListener {
 
         @Override
@@ -91,6 +95,10 @@ public class Game extends JPanel implements Runnable {
                 case 'l':
                     System.out.println("RIGHT!");
                     command = TURN_RIGHT;
+                    break;
+                case 'r':
+                    System.out.println("READY!");
+                    command = 10;
                     break;
                 case 'e':
                     System.exit(0);

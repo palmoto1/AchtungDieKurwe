@@ -20,7 +20,7 @@ public class Server implements Runnable {
 
     private boolean running;
     private ArrayBlockingQueue<PlayerHandler> players; //lägg i adapter klass
-    private final ArrayList<Coordinate> coordinates;
+    private final ArrayList<Coordinate> coordinates; // egen klass?
     private int capacity;
 
     public Server(int port) {
@@ -73,6 +73,14 @@ public class Server implements Runnable {
         }
     }
 
+    public synchronized void broadcastExcluding(Object data, PlayerHandler playerHandler) {
+        for (PlayerHandler ch : players) {
+            if (playerHandler.getId() != ch.getId()) {
+                ch.writeData(data);
+            }
+        }
+    }
+
     public synchronized void removeThread(PlayerHandler playerHandler) {
         if (players.remove(playerHandler)) {
             System.out.println("Player with id: " + playerHandler.getId() + " quit");
@@ -103,8 +111,22 @@ public class Server implements Runnable {
         coordinates.add(coordinate);
     }
 
+    public void clearCoordinates () {
+
+        coordinates.clear();
+    }
+
     public int getNumberOfPlayers(){
         return players.size();
+    }
+
+    public boolean allPlayersReady(){
+        for (PlayerHandler player : players){
+            if (!player.isReady()){
+                return false;
+            }
+        }
+        return !players.isEmpty();
     }
 
     private void increaseCapacity() {
