@@ -16,18 +16,16 @@ public class ServerUDP implements Runnable {
     private static int NextColorID = 0;
 
     private final Thread thread;
+    private DatagramSocket socket;
     private final int port;
 
     private boolean running;
-    private HashMap<String, PlayerHandlerUDP> players; //lägg i adapter klass
-    private final ArrayList<Coordinate> coordinates; // egen klass?
-
-
-    private DatagramSocket socket;
+    private final HashMap<String, PlayerHandlerUDP> players;
+    private final ArrayList<Coordinate> coordinates;
 
     public ServerUDP(int port) {
-        thread = new Thread(this);
         this.port = port;
+        thread = new Thread(this);
         players = new HashMap<>();
         coordinates = new ArrayList<>();
 
@@ -43,8 +41,8 @@ public class ServerUDP implements Runnable {
         } catch (SocketException e) {
             e.printStackTrace();
         }
-        thread.start();
         running = true;
+        thread.start();
         System.out.println("Server started on port " + port);
     }
 
@@ -54,7 +52,6 @@ public class ServerUDP implements Runnable {
 
     @Override
     public void run() {
-
         while (running) {
             byte[] data = new byte[1024];
             DatagramPacket packet = new DatagramPacket(data, data.length);
@@ -76,42 +73,53 @@ public class ServerUDP implements Runnable {
         PlayerHandlerUDP player;
         String toSend;
         switch (type) {
-            case MessageType.CONNECT: // connect
+            case MessageType.CONNECT:
                 System.out.println("[User: " + name + ":" + address.getHostAddress() + ":" + port + "] "
                         + " has connected...");
                 addPlayer(new PlayerHandlerUDP(this, address, port, name, NextColorID++));
+                //should refresh so starting points are shown to all players
                 break;
-            case MessageType.DISCONNECT: // connect
+            case MessageType.DISCONNECT:
                 System.out.println("[User: " + name + ":" + address.getHostAddress() + ":" + port + "] "
                         + " has disconnected...");
                 removePlayer(name);
                 break;
-            case MessageType.READY: // ready (skicka till alla att han e redo) // starta spel om alla spelare e redo
+            case MessageType.READY:
                 System.out.println("[User: " + name + ":" + address.getHostAddress() + ":" + port + "] "
                         + " is ready...");
                 player = findPlayer(name);
+                player.setReady();
                 toSend = MessageType.READY + ", ," + name;
                 sendToAllButOne(toSend.getBytes(StandardCharsets.UTF_8), player);
+                if (allPlayersReady()){ // och om antalet min-spelare är nått
+                    activatePlayers();
+                }
                 break;
-            case MessageType.MOVE: // move (updatera move och skicka kordinat samt addera den och kolla kollision)
-                //gör bara om redo!!
+            case MessageType.MOVE:
                 player = findPlayer(name);
-                player.move(tokens[1]);
-                Coordinate coordinate = player.getHead();
-                coordinates.add(coordinate);
-                toSend = MessageType.MOVE + "," + coordinate.toString() + "," + name;
-                sendToAll(toSend.getBytes(StandardCharsets.UTF_8));
+                if (player != null && player.isActive()) {
+                    String direction = tokens[1];
+                    player.move(direction);
+                    Coordinate coordinate = player.getHead();
+                    coordinates.add(coordinate);
+                    toSend = MessageType.MOVE + "," + coordinate.toString() + "," + name;
+                    sendToAll(toSend.getBytes(StandardCharsets.UTF_8));
+                    if (hasCollision(coordinate)){
+                        player.deactivate();
+                    }
+                }
                 break;
         }
     }
 
 
 
-    /*private synchronized void startGame() {
-        for (PlayerHandlerUDP ch : players) {
-            ch.start();
+    private synchronized void activatePlayers() {
+        for (Map.Entry<String, PlayerHandlerUDP> set : players.entrySet()) {
+            PlayerHandlerUDP player = set.getValue();
+            player.activate();
         }
-    }*/
+    }
 
     private PlayerHandlerUDP findPlayer(String name) {
         return players.get(name);

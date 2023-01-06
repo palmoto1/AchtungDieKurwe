@@ -18,7 +18,6 @@ public class Game extends JPanel implements Runnable {
     private final LinkedList<Coordinate> coordinates;
     private int command;
     private boolean running;
-    private boolean active;
 
     public Game(ClientUDP client) {
         setBackground(Color.black);
@@ -33,32 +32,25 @@ public class Game extends JPanel implements Runnable {
 
 
     public void start() {
-        running = false;
-        active = true;
+        running = true;
+
         new Thread(this).start();
     }
 
     @Override
     public void run() {
         System.out.println("Starting Game!");
-        while (active) {
-            while (running) {
-                repaint();
-                String msg = MessageType.MOVE + "," + command + "," + client.getName();
-                client.sendData(msg.getBytes(StandardCharsets.UTF_8));
-                //client.send(command);
-                try {
-                    Thread.sleep(5);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+
+        while (running) {
+            repaint();
+            String msg = MessageType.MOVE + "," + command + "," + client.getName();
+            client.sendData(msg.getBytes(StandardCharsets.UTF_8));
+            //client.send(command);
             try {
-                Thread.sleep(25);
+                Thread.sleep(5);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
         }
     }
 
@@ -91,10 +83,6 @@ public class Game extends JPanel implements Runnable {
         return new Coordinate(x, y, visible, colorId);
     }
 
-    public void setCommand(int command) {
-        this.command = command;
-    }
-
     private class InputHandler implements KeyListener {
 
         @Override
@@ -107,22 +95,22 @@ public class Game extends JPanel implements Runnable {
             switch (e.getKeyChar()) {
                 case 'a':
                 case 'j':
-                    System.out.println("LEFT!");
+                    //System.out.println("LEFT!");
                     command = TURN_LEFT;
                     break;
                 case 'd':
                 case 'l':
-                    System.out.println("RIGHT!");
+                    //System.out.println("RIGHT!");
                     command = TURN_RIGHT;
                     break;
                 case 'r':
-                    System.out.println("READY!");
-                    running = true;
+                    //System.out.println("READY!");
+                    String ready = MessageType.READY + ",," + client.getName();
+                    client.sendData(ready.getBytes(StandardCharsets.UTF_8));
                     //command = READY;
                     break;
                 case 'e':
-                    //skicka disconnect;
-                    String connect = MessageType.DISCONNECT + ",disconnected," + client.getName();
+                    String connect = MessageType.DISCONNECT + ",," + client.getName();
                     client.sendData(connect.getBytes(StandardCharsets.UTF_8));
                     System.exit(0);
                     break;

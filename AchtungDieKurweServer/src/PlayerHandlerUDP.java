@@ -28,6 +28,7 @@ public class PlayerHandlerUDP {
     private int intervalCounter;
     private final int colorId;
     private boolean ready;
+    private boolean active;
 
     public PlayerHandlerUDP(ServerUDP server, InetAddress address, int port, String name, int colorId) {
         this.server = server;
@@ -40,6 +41,7 @@ public class PlayerHandlerUDP {
 
     private void initialize() {
         ready = false;
+        active = false;
         direction = Math.random() * 360;
         double x = RANDOM.nextDouble(500);
         double y = RANDOM.nextDouble(500);
@@ -64,6 +66,21 @@ public class PlayerHandlerUDP {
         return ready;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public void activate(){
+        active = true;
+    }
+    public void deactivate(){
+        active = false;
+    }
+
+    public void setReady(){
+        ready = true;
+    }
+
     public void setDirection(int command) {
         //int command = Integer.parseInt(data);
         if (command == TURN_LEFT) {
@@ -73,7 +90,7 @@ public class PlayerHandlerUDP {
         }
     }
 
-    public void update() {
+    private void update() {
         direction %= 360;
         double x = SPEED * Math.cos(Math.toRadians(direction));
         double y = SPEED * Math.sin(Math.toRadians(direction));
