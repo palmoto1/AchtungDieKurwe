@@ -1,6 +1,6 @@
 import java.awt.*;
 
-public class ColorHandler {
+public final class ColorHandler {
 
     private ColorHandler(){}
 

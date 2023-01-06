@@ -6,14 +6,14 @@ public class Main {
 
 
 
-        Client client;
+        ClientUDP client;
 
         if (args.length >= 2) {
-            client = new Client(args[0], Integer.parseInt(args[1]));
+            client = new ClientUDP(args[0], Integer.parseInt(args[1]));
         } else if (args.length == 1) {
-            client = new Client(args[0]);
+            client = new ClientUDP(args[0]);
         } else {
-            client = new Client();
+            client = new ClientUDP();
         }
 
         client.start();

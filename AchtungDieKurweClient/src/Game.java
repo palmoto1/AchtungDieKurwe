@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
 public class Game extends JPanel implements Runnable {
@@ -12,14 +13,14 @@ public class Game extends JPanel implements Runnable {
     private static final int READY = 10;
 
 
-
-    private final Client client;
+    private final ClientUDP client;
     private final GUI gui;
     private final LinkedList<Coordinate> coordinates;
     private int command;
     private boolean running;
+    private boolean active;
 
-    public Game(Client client) {
+    public Game(ClientUDP client) {
         setBackground(Color.black);
         setForeground(Color.white);
         addKeyListener(new InputHandler());
@@ -31,20 +32,29 @@ public class Game extends JPanel implements Runnable {
     }
 
 
-
     public void start() {
-        running = true;
+        running = false;
+        active = true;
         new Thread(this).start();
     }
 
     @Override
     public void run() {
         System.out.println("Starting Game!");
-        while (running) {
-            repaint();
-            client.send(command);
+        while (active) {
+            while (running) {
+                repaint();
+                String msg = MessageType.MOVE + "," + command + "," + client.getName();
+                client.sendData(msg.getBytes(StandardCharsets.UTF_8));
+                //client.send(command);
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             try {
-                Thread.sleep(5);
+                Thread.sleep(25);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -68,11 +78,11 @@ public class Game extends JPanel implements Runnable {
 
 
     public synchronized void addCoordinate(String data) {
-        Coordinate coordinate = decodeCoordinate(data);
+        Coordinate coordinate = parseData(data);
         coordinates.add(coordinate);
     }
 
-    private Coordinate decodeCoordinate(String data){
+    private Coordinate parseData(String data) {
         String[] tokenizedData = data.split(" ");
         double x = Double.parseDouble(tokenizedData[0]);
         double y = Double.parseDouble(tokenizedData[1]);
@@ -107,9 +117,13 @@ public class Game extends JPanel implements Runnable {
                     break;
                 case 'r':
                     System.out.println("READY!");
-                    command = READY;
+                    running = true;
+                    //command = READY;
                     break;
                 case 'e':
+                    //skicka disconnect;
+                    String connect = MessageType.DISCONNECT + ",disconnected," + client.getName();
+                    client.sendData(connect.getBytes(StandardCharsets.UTF_8));
                     System.exit(0);
                     break;
                 default:

@@ -2,21 +2,21 @@ import java.util.Random;
 
 
 //TODO: samla paths efter ID
-public class Player implements Runnable {
+public class Player{
 
 
     private static final int TURN_LEFT = 1;
     private static final int TURN_RIGHT = 2;
     private static final int VISIBLE = 1;
     private static final int NOT_VISIBLE = 0;
-    private static final int INTERVAL = 50;
-    private static final int SPEED = 3;
+    private static final int INTERVAL = 100;
+    private static final double SPEED = 3;
     private static final int DIR_CHANGE = 2;
 
     private static final Random rnd = new Random();
 
 
-    private final Thread thread;
+    //private final Thread thread;
     private int colorId;
     private Coordinate head;
     private double direction;
@@ -39,13 +39,13 @@ public class Player implements Runnable {
         head = new Coordinate(x, y, VISIBLE, colorId);
 
         intervalCounter = 0;
-        thread = new Thread(this);
+        //thread = new Thread(this);
 
     }
 
 
     public void start() {
-        thread.start();
+        //thread.start();
     }
 
     public void pause() {
@@ -53,8 +53,8 @@ public class Player implements Runnable {
         paused = true;
     }
 
-    public boolean isPaused() {
-        return paused;
+    public boolean active() {
+        return active;
     }
 
     public void setDirection(int command) {
@@ -71,7 +71,15 @@ public class Player implements Runnable {
         double x = SPEED * Math.cos(Math.toRadians(direction));
         double y = SPEED * Math.sin(Math.toRadians(direction));
 
-        int visible = checkCoordinateVisible();
+        int visible = VISIBLE;
+
+        if (intervalCounter > INTERVAL) {
+            visible = NOT_VISIBLE;
+            if (intervalCounter > INTERVAL + 10) {
+                intervalCounter = 0;
+            }
+        }
+        intervalCounter++;
 
         head = new Coordinate(head.getX() + x, head.getY() + y, visible, colorId);
 
@@ -85,37 +93,18 @@ public class Player implements Runnable {
     public void run() {
         System.out.println("Starting player!");
         while (active) {
-            while (!paused) {
-                update();
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+
+            update();
             try {
-                Thread.sleep(25);
+                Thread.sleep(50);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    private int checkCoordinateVisible(){
-        int visible = VISIBLE;
-
-        if (intervalCounter > INTERVAL){
-            visible = NOT_VISIBLE;
-            if (intervalCounter > INTERVAL + 2) {
-                intervalCounter = 0;
-            }
-        }
-        intervalCounter++;
-        return visible;
 
     }
 
-    public void exit() {
+    public void stop() {
         active = false;
     }
 

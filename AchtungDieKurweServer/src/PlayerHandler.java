@@ -2,7 +2,12 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 
-//TODO: fixa GUIn och skicka states
+//TODO: fixa GUIn så man ser om spelare är ready osv
+// och bestäm hur du vill ha spelflödet rent generellt (inspo, kansk en separat chatt)
+// samt testa att det funkar korrekt över flera datorer (gäller alla uppgifter)
+// förök fixa udp enligt https://github.com/vanZeben/2D-Game-Engine/blob/master/src/ca/vanzeben/game/net/GameServer.java
+// och kör chatten med egen server som tcp. Testa om det funkar (UDP verkar ej behöva trådade spelare?)
+// kör vidare med bara TCP annars med lite mer gui och nöj dig (viktiga är att det funkar över flera datorer)
 
 public class PlayerHandler implements Runnable {
 
@@ -68,6 +73,7 @@ public class PlayerHandler implements Runnable {
             while (data != null) {
 
                 player.setDirection((int)data);
+                //player.update();
                 addCoordinate(player.getHead());
                 data = in.readObject();
             }
@@ -103,14 +109,14 @@ public class PlayerHandler implements Runnable {
                 in.readObject();
                 Thread.sleep(25);
             }
-            System.out.println(server.getNumberOfPlayers());
+            //System.out.println(server.getNumberOfPlayers());
 
             addCoordinate(player.getHead()); //refresh start point so that it is visible to newly connected players
 
             while (!server.allPlayersReady()) {
                 if (!ready) {
                     if ((int)in.readObject() == READY) {
-
+                        server.broadcast(id); // broadcast id to all connected players
                         // should be sent
                         System.out.println("User with ID: " + id + " is ready!");
                         ready = true;
@@ -147,9 +153,9 @@ public class PlayerHandler implements Runnable {
     }
 
     private void addCoordinate(Coordinate coordinate){
-        if (server.hasCollision(coordinate) && !player.isPaused()){
+        if (server.hasCollision(coordinate) && player.active()){
             System.out.println("Collision");
-            player.pause();
+            player.stop();
         }
         server.addCoordinate(coordinate);
         server.broadcast(coordinate.toString());
