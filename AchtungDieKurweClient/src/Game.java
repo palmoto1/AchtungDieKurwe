@@ -10,7 +10,6 @@ public class Game extends JPanel implements Runnable {
     private static final int MOVE_FORWARD = 0;
     private static final int TURN_LEFT = 1;
     private static final int TURN_RIGHT = 2;
-    private static final int READY = 10;
 
 
     private final ClientUDP client;
@@ -110,7 +109,8 @@ public class Game extends JPanel implements Runnable {
                     //command = READY;
                     break;
                 case 'e':
-                    String connect = MessageType.DISCONNECT + ",," + client.getName();
+                    client.createMessage(MessageType.DISCONNECT, client.getName());
+                    String connect = client.createMessage(MessageType.DISCONNECT, client.getName());
                     client.sendData(connect.getBytes(StandardCharsets.UTF_8));
                     System.exit(0);
                     break;

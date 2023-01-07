@@ -14,8 +14,6 @@ public class ClientUDP implements Runnable {
 
     private DatagramSocket socket;
     private InetAddress address;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
 
     private String name;
     private Game game;
@@ -26,7 +24,7 @@ public class ClientUDP implements Runnable {
     public ClientUDP(String host, int port) {
         this.host = host;
         this.port = port;
-        name = "Olle";
+        name = "Kalle"; // should come from GUI
     }
 
     public ClientUDP() {
@@ -45,8 +43,8 @@ public class ClientUDP implements Runnable {
 
             game = new Game(this);
             running = true;
-            String connect = MessageType.CONNECT + ",connected," + name;
-            sendData(connect.getBytes(StandardCharsets.UTF_8));
+            String message = createMessage(MessageType.CONNECT, name);
+            sendData(message.getBytes(StandardCharsets.UTF_8));
             game.start();
             new Thread(this).start();
 
@@ -108,23 +106,25 @@ public class ClientUDP implements Runnable {
                 System.out.println("[" + name + " " + address.getHostAddress() + ":" + port + "] "
                         + " is ready...");
                 break;
-            case MessageType.MOVE: // move (updatera move och skicka kordinat samt addera den och kolla kollision)
+            case MessageType.MOVE:
                 String coordinate = tokens[1];
                 game.addCoordinate(coordinate);
                 break;
         }
     }
 
+    //move to message handler
+    public String createMessage(String type, String content, String userName){
+        return type + "," + content + "," + userName;
+    }
+    //move to message handler
+    public String createMessage(String type, String userName){
+        return createMessage(type, "", userName);
+    }
+
     public void kill() {
-        try {
-            running = false;
-            in.close();
-            out.close();
-            socket.close();
-        } catch (IOException e) {
-            System.err.println("I/O error when disconnecting from server: " + e.getMessage());
-            e.printStackTrace();
-        }
+        running = false;
+        socket.close();
     }
 
     public String getName() {

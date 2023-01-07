@@ -1,7 +1,7 @@
 public class Coordinate {
 
 
-    private static final double SIZE = 1.5;
+    private static final double SIZE = 0.5;
     private final double x;
     private final double y;
     private final int visible;

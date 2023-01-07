@@ -1,60 +1,81 @@
+import java.net.InetAddress;
 import java.util.Random;
 
+//TODO: fixa GUIn så man ser om spelare är ready osv
+// och bestäm hur du vill ha spelflödet rent generellt (inspo, kansk en separat chatt)
+// samt testa att det funkar korrekt över flera datorer (gäller alla uppgifter)
 
-//TODO: samla paths efter ID
-public class Player{
-
+public class Player {
 
     private static final int TURN_LEFT = 1;
     private static final int TURN_RIGHT = 2;
     private static final int VISIBLE = 1;
     private static final int NOT_VISIBLE = 0;
     private static final int INTERVAL = 100;
-    private static final double SPEED = 3;
+    private static final double SPEED = 1;
     private static final int DIR_CHANGE = 2;
 
-    private static final Random rnd = new Random();
+    private static final Random RANDOM = new Random();
 
+    private final InetAddress address;
+    private final int port;
+    private final String name;
 
-    //private final Thread thread;
-    private int colorId;
     private Coordinate head;
     private double direction;
     private int intervalCounter;
-
-
-    private boolean paused;
+    private final int colorId;
+    private boolean ready;
     private boolean active;
 
-
-    public Player(int colorId) {
+    public Player(InetAddress address, int port, String name, int colorId) {
+        this.address = address;
+        this.port = port;
+        this.name = name;
         this.colorId = colorId;
-        paused = false;
-        active = true;
+        initialize();
+    }
 
+    private void initialize() {
+        ready = false;
+        active = false;
         direction = Math.random() * 360;
-
-        double x = rnd.nextDouble(500);
-        double y = rnd.nextDouble(500);
+        double x = RANDOM.nextDouble(500);
+        double y = RANDOM.nextDouble(500);
         head = new Coordinate(x, y, VISIBLE, colorId);
-
         intervalCounter = 0;
-        //thread = new Thread(this);
-
     }
 
 
-    public void start() {
-        //thread.start();
+
+
+    public void move(String data) {
+        int command = Integer.parseInt(data);
+        setDirection(command);
+        update();
     }
 
-    public void pause() {
-        //paused = !paused;
-        paused = true;
+    public Coordinate getHead() {
+        return head;
     }
 
-    public boolean active() {
+    public boolean isReady() {
+        return ready;
+    }
+
+    public boolean isActive() {
         return active;
+    }
+
+    public void activate(){
+        active = true;
+    }
+    public void deactivate(){
+        active = false;
+    }
+
+    public void setReady(){
+        ready = true;
     }
 
     public void setDirection(int command) {
@@ -66,7 +87,7 @@ public class Player{
         }
     }
 
-    public void update() {
+    private void update() {
         direction %= 360;
         double x = SPEED * Math.cos(Math.toRadians(direction));
         double y = SPEED * Math.sin(Math.toRadians(direction));
@@ -85,27 +106,15 @@ public class Player{
 
     }
 
-    public Coordinate getHead() {
-        return head;
+    public InetAddress getAddress() {
+        return address;
     }
 
-    //@Override
-    public void run() {
-        System.out.println("Starting player!");
-        while (active) {
-
-            update();
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
+    public int getPort() {
+        return port;
     }
 
-    public void stop() {
-        active = false;
+    public String getName() {
+        return name;
     }
-
 }
