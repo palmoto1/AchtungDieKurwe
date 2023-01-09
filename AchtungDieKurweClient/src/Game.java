@@ -5,6 +5,8 @@ import java.awt.event.KeyListener;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
+
+//behöver verkligen vara trådad? kan repainta o skicka i clientens loop
 public class Game extends JPanel implements Runnable {
 
     private static final int MOVE_FORWARD = 0;
@@ -13,16 +15,12 @@ public class Game extends JPanel implements Runnable {
 
 
     private final ClientUDP client;
-    private final GUI gui;
     private final LinkedList<Coordinate> coordinates;
     private int command;
     private boolean running;
 
     public Game(ClientUDP client) {
-        setBackground(Color.black);
-        setForeground(Color.white);
         addKeyListener(new InputHandler());
-        gui = new GUI(this);
 
         coordinates = new LinkedList<>();
         this.client = client;
@@ -42,9 +40,8 @@ public class Game extends JPanel implements Runnable {
 
         while (running) {
             repaint();
-            String msg = MessageType.MOVE + "," + command + "," + client.getName();
-            client.sendData(msg.getBytes(StandardCharsets.UTF_8));
-            //client.send(command);
+            String message = MessageType.MOVE + "," + command + "," + client.getUserName();
+            client.sendData(message.getBytes(StandardCharsets.UTF_8));
             try {
                 Thread.sleep(5);
             } catch (InterruptedException e) {
@@ -52,6 +49,7 @@ public class Game extends JPanel implements Runnable {
             }
         }
     }
+
 
     @Override
     public void paintComponent(Graphics g) {
@@ -69,12 +67,16 @@ public class Game extends JPanel implements Runnable {
 
 
     public synchronized void addCoordinate(String data) {
-        Coordinate coordinate = parseData(data);
+        Coordinate coordinate = parseCoordinate(data);
         coordinates.add(coordinate);
     }
 
-    private Coordinate parseData(String data) {
-        String[] tokenizedData = data.split(" ");
+    public synchronized void clearCoordinates() {
+        coordinates.clear();
+    }
+
+    private Coordinate parseCoordinate(String coordinate) {
+        String[] tokenizedData = coordinate.split(":");
         double x = Double.parseDouble(tokenizedData[0]);
         double y = Double.parseDouble(tokenizedData[1]);
         int visible = Integer.parseInt(tokenizedData[2]);
@@ -82,7 +84,7 @@ public class Game extends JPanel implements Runnable {
         return new Coordinate(x, y, visible, colorId);
     }
 
-    private class InputHandler implements KeyListener {
+    public class InputHandler implements KeyListener {
 
         @Override
         public void keyTyped(KeyEvent e) {
@@ -104,13 +106,13 @@ public class Game extends JPanel implements Runnable {
                     break;
                 case 'r':
                     //System.out.println("READY!");
-                    String ready = MessageType.READY + ",," + client.getName();
+                    String ready = MessageType.READY + ",," + client.getUserName();
                     client.sendData(ready.getBytes(StandardCharsets.UTF_8));
                     //command = READY;
                     break;
                 case 'e':
-                    client.createMessage(MessageType.DISCONNECT, client.getName());
-                    String connect = client.createMessage(MessageType.DISCONNECT, client.getName());
+                    client.createMessage(MessageType.DISCONNECT, client.getUserName());
+                    String connect = client.createMessage(MessageType.DISCONNECT, client.getUserName());
                     client.sendData(connect.getBytes(StandardCharsets.UTF_8));
                     System.exit(0);
                     break;

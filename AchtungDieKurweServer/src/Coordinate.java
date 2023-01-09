@@ -6,13 +6,13 @@ public class Coordinate {
     private final double y;
     private final int visible;
 
-    private final int colorId;
+    private final int playerId;
 
-    public Coordinate(double x, double y, int visible, int colorId) {
+    public Coordinate(double x, double y, int visible, int playerId) {
         this.x = x;
         this.y = y;
         this.visible = visible;
-        this.colorId = colorId;
+        this.playerId = playerId;
     }
 
     public double getX() {
@@ -29,7 +29,7 @@ public class Coordinate {
 
     @Override
     public String toString() {
-        return x + " " + y + " " + visible + " " + colorId;
+        return x + ":" + y + ":" + visible + ":" + playerId;
     }
 
 

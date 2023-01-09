@@ -55,6 +55,7 @@ public class ServerUDP implements Runnable {
             }
             String message = new String(packet.getData(), 0, packet.getLength());
             parse(message, packet.getAddress(), packet.getPort());
+            gameHandler.checkGameStatus();
 
         }
     }

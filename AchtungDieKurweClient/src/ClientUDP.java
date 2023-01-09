@@ -1,7 +1,4 @@
-import javax.swing.*;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 
@@ -15,8 +12,9 @@ public class ClientUDP implements Runnable {
     private DatagramSocket socket;
     private InetAddress address;
 
-    private String name;
+    private String userName;
     private Game game;
+    private GUI gui;
 
     private boolean running;
 
@@ -24,7 +22,7 @@ public class ClientUDP implements Runnable {
     public ClientUDP(String host, int port) {
         this.host = host;
         this.port = port;
-        name = "Kalle"; // should come from GUI
+        userName = "August"; // should come from GUI
     }
 
     public ClientUDP() {
@@ -42,10 +40,14 @@ public class ClientUDP implements Runnable {
             this.address = InetAddress.getByName(host);
 
             game = new Game(this);
-            running = true;
-            String message = createMessage(MessageType.CONNECT, name);
+            gui = new GUI(game);
+
+            String message = createMessage(MessageType.CONNECT, userName);
             sendData(message.getBytes(StandardCharsets.UTF_8));
+
+            running = true;
             game.start();
+
             new Thread(this).start();
 
         } catch (UnknownHostException ex) {
@@ -90,25 +92,35 @@ public class ClientUDP implements Runnable {
     private void parsePacket(String message, InetAddress address, int port) {
         String[] tokens = message.split(",");
         String type = tokens[0];
-        String name = tokens[2];
+        String player = tokens[2];
         switch (type) {
             case MessageType.CONNECT:
-                System.out.println("[" + name + " " + address.getHostAddress() + ":" + port + "] "
+                System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
                         + " has connected...");
+                int id = Integer.parseInt(tokens[1]);
+                gui.updatePlayerLabel(player, id, 0);
 
                 break;
             case MessageType.DISCONNECT:
-                System.out.println("[" + name + " " + address.getHostAddress() + ":" + port + "] "
+                System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
                         + " has disconnected...");
 
                 break;
             case MessageType.READY:
-                System.out.println("[" + name + " " + address.getHostAddress() + ":" + port + "] "
+                System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
                         + " is ready...");
                 break;
             case MessageType.MOVE:
                 String coordinate = tokens[1];
                 game.addCoordinate(coordinate);
+                break;
+            case MessageType.RESTART:
+                game.clearCoordinates();
+                break;
+            case MessageType.SCORE_UPDATE:
+                id = Integer.parseInt(tokens[1]);
+                int score = Integer.parseInt(tokens[3]);
+                gui.updatePlayerLabel(player, id, score);
                 break;
         }
     }
@@ -127,7 +139,7 @@ public class ClientUDP implements Runnable {
         socket.close();
     }
 
-    public String getName() {
-        return name;
+    public String getUserName() {
+        return userName;
     }
 }

@@ -1,9 +1,7 @@
 import java.net.InetAddress;
 import java.util.Random;
 
-//TODO: fixa GUIn så man ser om spelare är ready osv
-// och bestäm hur du vill ha spelflödet rent generellt (inspo, kansk en separat chatt)
-// samt testa att det funkar korrekt över flera datorer (gäller alla uppgifter)
+// TODO: dela upp i fler klasser, Line osv. Player kan ju bara vara en model
 
 public class Player {
 
@@ -24,25 +22,31 @@ public class Player {
     private Coordinate head;
     private double direction;
     private int intervalCounter;
-    private final int colorId;
+    private final int id;
     private boolean ready;
     private boolean active;
+    private int score;
 
-    public Player(InetAddress address, int port, String name, int colorId) {
+    public Player(InetAddress address, int port, String name, int id) {
         this.address = address;
         this.port = port;
         this.name = name;
-        this.colorId = colorId;
+        this.id = id;
+        score = 0;
+
         initialize();
     }
 
-    private void initialize() {
+    public void initialize() {
         ready = false;
         active = false;
+
         direction = Math.random() * 360;
+
         double x = RANDOM.nextDouble(500);
         double y = RANDOM.nextDouble(500);
-        head = new Coordinate(x, y, VISIBLE, colorId);
+        head = new Coordinate(x, y, VISIBLE, id);
+
         intervalCounter = 0;
     }
 
@@ -53,6 +57,22 @@ public class Player {
         int command = Integer.parseInt(data);
         setDirection(command);
         update();
+    }
+
+    public InetAddress getAddress() {
+        return address;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public Coordinate getHead() {
@@ -78,8 +98,15 @@ public class Player {
         ready = true;
     }
 
+    public int getScore() {
+        return score;
+    }
+
+    public void increaseScore(){
+        score++;
+    }
+
     public void setDirection(int command) {
-        //int command = Integer.parseInt(data);
         if (command == TURN_LEFT) {
             direction -= DIR_CHANGE + 360;
         } else if (command == TURN_RIGHT) {
@@ -102,19 +129,14 @@ public class Player {
         }
         intervalCounter++;
 
-        head = new Coordinate(head.getX() + x, head.getY() + y, visible, colorId);
+        head = new Coordinate(head.getX() + x, head.getY() + y, visible, id);
 
     }
 
-    public InetAddress getAddress() {
-        return address;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public String getName() {
-        return name;
+    @Override
+    public String toString() {
+        return name + " " +
+                id +
+                " " + score;
     }
 }
