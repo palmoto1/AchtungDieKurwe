@@ -1,7 +1,5 @@
 public class Main {
 
-
-    //TODO: lägg till syncrozied på alla trådade uppgifter?
     public static void main(String[] args) {
 
 

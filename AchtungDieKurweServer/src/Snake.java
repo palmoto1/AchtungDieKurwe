@@ -55,8 +55,6 @@ public class Snake {
         head = new Coordinate(head.getX() + x, head.getY() + y, visible, playerId);
 
     }
-
-    //getSnake istället?
     public Coordinate getHead() {
         return head;
     }

@@ -39,23 +39,21 @@ public class Game extends JPanel implements Runnable {
 
     public void connect(){
         String message = messageHandler.createMessage(MessageType.CONNECT, userName);
-        client.sendData(message.getBytes(StandardCharsets.UTF_8));
+        client.send(message.getBytes(StandardCharsets.UTF_8));
     }
 
     public void disconnect(){
         String message = messageHandler.createMessage(MessageType.DISCONNECT, userName);
-        client.sendData(message.getBytes(StandardCharsets.UTF_8));
+        client.send(message.getBytes(StandardCharsets.UTF_8));
     }
 
     public void init(String userName) {
         this.userName = userName;
         connect();
     }
-
-    //move to client!
     public void setReady(){
         String ready = messageHandler.createMessage(MessageType.READY, userName);
-        client.sendData(ready.getBytes(StandardCharsets.UTF_8));
+        client.send(ready.getBytes(StandardCharsets.UTF_8));
     }
 
 
@@ -66,7 +64,7 @@ public class Game extends JPanel implements Runnable {
         while (running) {
             repaint();
             String message = messageHandler.createMessage(MessageType.MOVE, String.valueOf(command), userName);
-            client.sendData(message.getBytes(StandardCharsets.UTF_8));
+            client.send(message.getBytes(StandardCharsets.UTF_8));
             try {
                 Thread.sleep(5);
             } catch (InterruptedException e) {

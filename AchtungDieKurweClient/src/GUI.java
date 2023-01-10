@@ -107,30 +107,4 @@ public class GUI {
         }
     }
 
-    /*private class ButtonListener implements ChangeListener {
-        private boolean pressed = false;  // holds the last pressed state of the button
-
-        @Override
-        public void stateChanged(ChangeEvent e) {
-            ButtonModel model = (ButtonModel) e.getSource();
-
-            // if the current state differs from the previous state
-            if (model.isPressed() != pressed) {
-                if (model.isPressed()){
-                    handlePressedButton();
-                }
-                else {
-                    game.requestFocus();
-                }
-                pressed = model.isPressed();
-            }
-        }
-
-        private void handlePressedButton(){
-            if (!game.isRunning() && !inputText.getText().isBlank()){
-                game.setUserName(inputText.getText());
-                game.start();
-            }
-        }
-    }*/
 }

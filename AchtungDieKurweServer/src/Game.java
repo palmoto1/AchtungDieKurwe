@@ -108,7 +108,7 @@ public class Game {
         if (player != null && player.isActive()) {
             player.move(direction);
 
-            Coordinate coordinate = player.getHead();
+            Coordinate coordinate = player.getSnake().getHead();
             coordinates.add(coordinate);
             sendCoordinate(coordinate, player);
 
@@ -197,7 +197,7 @@ public class Game {
         for (Map.Entry<String, Player> set : players.entrySet()) {
             Player player = set.getValue();
 
-            Coordinate startingPoint = player.getHead();
+            Coordinate startingPoint = player.getSnake().getHead();
             sendCoordinate(startingPoint, player);
         }
     }

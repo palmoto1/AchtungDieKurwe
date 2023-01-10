@@ -3,16 +3,15 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
+
+//TODO: fixa tokens så det blir mer konsekvent
 
 public class ClientUDP implements Runnable {
-    
 
     private static final int DEFAULT_PORT = 2000;
     private static final String DEFAULT_HOST = "127.0.0.1";
     private final String host;
     private final int port;
-
     private DatagramSocket socket;
     private InetAddress address;
     private Game game;
@@ -21,9 +20,8 @@ public class ClientUDP implements Runnable {
     private boolean running;
 
 
-    public ClientUDP(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public ClientUDP(String host) {
+        this(host, DEFAULT_PORT);
 
     }
 
@@ -31,8 +29,10 @@ public class ClientUDP implements Runnable {
         this(DEFAULT_HOST, DEFAULT_PORT);
     }
 
-    public ClientUDP(String host) {
-        this(host, DEFAULT_PORT);
+    public ClientUDP(String host, int port) {
+        this.host = host;
+        this.port = port;
+
     }
 
 
@@ -57,8 +57,8 @@ public class ClientUDP implements Runnable {
         }
     }
 
-    public void sendData(byte[] data) {
-            DatagramPacket packet = new DatagramPacket(data, data.length, address, 2000);
+    public void send(byte[] data) {
+            DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
             try {
                 socket.send(packet);
             } catch (IOException e) {

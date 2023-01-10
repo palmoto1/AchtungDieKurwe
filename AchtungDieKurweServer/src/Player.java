@@ -7,30 +7,25 @@ public class Player {
     private final String name;
     private final int id;
     private Snake snake;
+    private int score;
     private boolean ready;
     private boolean active;
-    private int score;
+
 
     public Player(InetAddress address, int port, String name, int id) {
         this.address = address;
         this.port = port;
         this.name = name;
         this.id = id;
-
         score = 0;
-
         initialize();
     }
 
     public void initialize() {
         ready = false;
         active = false;
-
         snake = new Snake(id);
     }
-
-
-
 
     public void move(String data) {
         int command = Integer.parseInt(data);
@@ -54,8 +49,8 @@ public class Player {
         return id;
     }
 
-    public Coordinate getHead() {
-        return snake.getHead();
+    public Snake getSnake() {
+        return snake;
     }
 
     public boolean isReady() {

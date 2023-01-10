@@ -13,16 +13,4 @@ public class MessageHandler {
 
         return sb.toString();
     }
-    /*public String createMessage(String type, String content, String userName) {
-        return type + "," + content + "," + userName;
-    }
-
-    //move to messagehandler
-    public String createMessage(String type, String userName) {
-        return createMessage(type, null, userName);
-    }
-
-    public String createMessage(String type) {
-        return createMessage(type, null);
-    }*/
 }

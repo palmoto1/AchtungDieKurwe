@@ -2,10 +2,11 @@ public class Coordinate {
 
 
     private static final double SIZE = 0.5;
+    private static final int WINDOW_WIDTH = 600;
+    private static final int WINDOW_HEIGHT = 800;
     private final double x;
     private final double y;
     private final int visible;
-
     private final int playerId;
 
     public Coordinate(double x, double y, int visible, int playerId) {
@@ -27,10 +28,6 @@ public class Coordinate {
         return visible != 0;
     }
 
-    @Override
-    public String toString() {
-        return x + ":" + y + ":" + visible + ":" + playerId;
-    }
 
 
 
@@ -45,8 +42,12 @@ public class Coordinate {
     }
 
     private boolean isOutsideWall() {
+        return x + SIZE > WINDOW_WIDTH || x < 0
+                || y + SIZE > WINDOW_HEIGHT || y < 0;
+    }
 
-        return x + SIZE > 600 || x < 0
-                || y + SIZE > 800 || y < 0;
+    @Override
+    public String toString() {
+        return x + ":" + y + ":" + visible + ":" + playerId;
     }
 }
