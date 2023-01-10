@@ -97,7 +97,7 @@ public class ClientUDP implements Runnable {
                         + " has connected...");
                 int id = Integer.parseInt(tokens[1]);
                 gui.updatePlayerLabel(player + " : " + 0, id);
-                gui.appendChat(player + " has joined!\n\n");
+                gui.appendChat(player + " has joined!");
 
                 break;
             case MessageType.CONNECTION_OK:
@@ -115,13 +115,13 @@ public class ClientUDP implements Runnable {
                         + " has disconnected...");
                 id = Integer.parseInt(tokens[1]);
                 gui.clearPlayerLabel(id);
-                gui.appendChat(player + " has left!\n\n");
+                gui.appendChat(player + " has left!");
                 break;
             case MessageType.READY:
                 player = tokens[1];
                 System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
                         + " is ready...");
-                gui.appendChat(player + " is ready!\n\n");
+                gui.appendChat(player + " is ready!");
                 break;
             case MessageType.MOVE:
                 String coordinate = tokens[1];

@@ -4,7 +4,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-//split up into more classes - message handler, player handler, etc
+
+//TODO: fix chat server/clent
 
 public class ServerUDP implements Runnable {
 

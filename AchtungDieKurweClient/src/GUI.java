@@ -93,7 +93,7 @@ public class GUI {
     }
 
     public void appendChat(String text){
-        chatArea.append(text);
+        chatArea.append(text + "\n\n");
     }
 
     private class ButtonListener implements ActionListener {
@@ -101,7 +101,7 @@ public class GUI {
         @Override
         public void actionPerformed(ActionEvent e) { // fixa detta så username måste godkännas innan start
             if (!game.isRunning() && !inputText.getText().isBlank()){
-                game.init(inputText.getText());
+                game.init(inputText.getText().trim());
             }
             game.requestFocus();
         }

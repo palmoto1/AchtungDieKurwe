@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-// dela upp denna i fler klasser?
 public class Game {
 
     private enum GameStatus {
@@ -18,7 +17,6 @@ public class Game {
     private final ServerUDP server;
     private final HashMap<String, Player> players;
     private final ArrayList<Coordinate> coordinates;
-
     private final MessageHandler messageHandler;
     private GameStatus gameStatus;
 
@@ -31,23 +29,21 @@ public class Game {
     }
 
     public void addPlayer(InetAddress address, int port, String name) {
-        if (hasPlayer(name)){
+        if (hasPlayer(name)) {
             String toSend = messageHandler.createMessage(
                     MessageType.CONNECTION_DENIED,
                     "Name " + name + " already taken",
                     name
             );
             server.send(toSend.getBytes(StandardCharsets.UTF_8), address, port);
-        }
-        else if (players.size() == MAX_NUMBER_OF_PLAYERS){
+        } else if (players.size() == MAX_NUMBER_OF_PLAYERS) {
             String toSend = messageHandler.createMessage(
                     MessageType.CONNECTION_DENIED,
                     "Lobby is full",
                     name
             );
             server.send(toSend.getBytes(StandardCharsets.UTF_8), address, port);
-        }
-        else {
+        } else {
             String toSend = messageHandler.createMessage(MessageType.CONNECTION_OK);
             server.send(toSend.getBytes(StandardCharsets.UTF_8), address, port);
 
@@ -87,7 +83,6 @@ public class Game {
     }
 
     public void reloadGame() {
-        //System.out.println("New Game!");
 
         gameStatus = GameStatus.IDLE;
         coordinates.clear();
@@ -147,7 +142,7 @@ public class Game {
     private void sendScores() {
         for (Map.Entry<String, Player> set : players.entrySet()) {
             Player player = set.getValue();
-            String toSend =messageHandler.createMessage(
+            String toSend = messageHandler.createMessage(
                     MessageType.SCORE_UPDATE,
                     String.valueOf(player.getId()),
                     player.getName(),
