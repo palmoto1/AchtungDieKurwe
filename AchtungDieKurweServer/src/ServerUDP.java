@@ -15,12 +15,12 @@ public class ServerUDP implements Runnable {
     private DatagramSocket socket;
     private final int port;
     private boolean running;
-    private final GameHandler gameHandler;
+    private final Game game;
 
     public ServerUDP(int port) {
         this.port = port;
         thread = new Thread(this);
-        gameHandler = new GameHandler(this);
+        game = new Game(this);
 
     }
 
@@ -55,7 +55,7 @@ public class ServerUDP implements Runnable {
             }
             String message = new String(packet.getData(), 0, packet.getLength());
             parse(message, packet.getAddress(), packet.getPort());
-            gameHandler.checkGameStatus();
+            game.checkGameStatus();
 
         }
     }
@@ -63,26 +63,29 @@ public class ServerUDP implements Runnable {
     private void parse(String message, InetAddress address, int port) {
         String[] tokens = message.split(",");
         String type = tokens[0];
-        String name = tokens[2];
         switch (type) {
             case MessageType.CONNECT:
+                String name = tokens[1];
                 System.out.println("[User: " + name + ":" + address.getHostAddress() + ":" + port + "] "
                         + " has connected...");
-                gameHandler.addPlayer(address, port, name);
+                game.addPlayer(address, port, name);
                 break;
             case MessageType.DISCONNECT:
+                name = tokens[1];
                 System.out.println("[User: " + name + ":" + address.getHostAddress() + ":" + port + "] "
                         + " has disconnected...");
-                gameHandler.removePlayer(name);
+                game.removePlayer(name);
                 break;
             case MessageType.READY:
+                name = tokens[1];
                 System.out.println("[User: " + name + ":" + address.getHostAddress() + ":" + port + "] "
                         + " is ready...");
-                gameHandler.handleReadyUser(name);
+                game.handleReadyPlayer(name);
                 break;
             case MessageType.MOVE:
+                name = tokens[2];
                 String direction = tokens[1];
-                gameHandler.handleMove(name, direction);
+                game.handleMove(name, direction);
                 break;
         }
     }

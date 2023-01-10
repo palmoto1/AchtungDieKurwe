@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
 
-//behöver verkligen vara trådad? kan repainta o skicka i clientens loop
+//behöver verkligen vara trådad? kan repainta o skicka i clientens loop? behövs syncronized?
 public class Game extends JPanel implements Runnable {
 
     private static final int MOVE_FORWARD = 0;
@@ -15,24 +15,49 @@ public class Game extends JPanel implements Runnable {
 
 
     private final ClientUDP client;
+
     private final LinkedList<Coordinate> coordinates;
+    private final MessageHandler messageHandler;
+
+    private String userName;
     private int command;
     private boolean running;
 
     public Game(ClientUDP client) {
-        addKeyListener(new InputHandler());
-
-        coordinates = new LinkedList<>();
         this.client = client;
+        coordinates = new LinkedList<>();
+        messageHandler = new MessageHandler();
         command = MOVE_FORWARD;
+        addKeyListener(new InputHandler());
     }
 
 
     public void start() {
         running = true;
-
         new Thread(this).start();
     }
+
+    public void connect(){
+        String message = messageHandler.createMessage(MessageType.CONNECT, userName);
+        client.sendData(message.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public void disconnect(){
+        String message = messageHandler.createMessage(MessageType.DISCONNECT, userName);
+        client.sendData(message.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public void init(String userName) {
+        this.userName = userName;
+        connect();
+    }
+
+    //move to client!
+    public void setReady(){
+        String ready = messageHandler.createMessage(MessageType.READY, userName);
+        client.sendData(ready.getBytes(StandardCharsets.UTF_8));
+    }
+
 
     @Override
     public void run() {
@@ -40,7 +65,7 @@ public class Game extends JPanel implements Runnable {
 
         while (running) {
             repaint();
-            String message = MessageType.MOVE + "," + command + "," + client.getUserName();
+            String message = messageHandler.createMessage(MessageType.MOVE, String.valueOf(command), userName);
             client.sendData(message.getBytes(StandardCharsets.UTF_8));
             try {
                 Thread.sleep(5);
@@ -84,12 +109,15 @@ public class Game extends JPanel implements Runnable {
         return new Coordinate(x, y, visible, colorId);
     }
 
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void stop() {
+        this.running = false;
+    }
+
     public class InputHandler implements KeyListener {
-
-        @Override
-        public void keyTyped(KeyEvent e) {
-
-        }
 
         @Override
         public void keyPressed(KeyEvent e) {
@@ -104,16 +132,13 @@ public class Game extends JPanel implements Runnable {
                     //System.out.println("RIGHT!");
                     command = TURN_RIGHT;
                     break;
-                case 'r':
+                case 'r': // ska göras med ready knapp i gui
                     //System.out.println("READY!");
-                    String ready = MessageType.READY + ",," + client.getUserName();
-                    client.sendData(ready.getBytes(StandardCharsets.UTF_8));
+                    setReady();
                     //command = READY;
                     break;
-                case 'e':
-                    client.createMessage(MessageType.DISCONNECT, client.getUserName());
-                    String connect = client.createMessage(MessageType.DISCONNECT, client.getUserName());
-                    client.sendData(connect.getBytes(StandardCharsets.UTF_8));
+                case 'e': //esc och window closed istället
+                    disconnect();
                     System.exit(0);
                     break;
                 default:
@@ -125,6 +150,10 @@ public class Game extends JPanel implements Runnable {
         public void keyReleased(KeyEvent e) {
             command = MOVE_FORWARD;
         }
+
+        @Override
+        public void keyTyped(KeyEvent e) {}
     }
+
 
 }

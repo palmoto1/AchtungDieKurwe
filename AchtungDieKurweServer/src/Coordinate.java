@@ -33,7 +33,7 @@ public class Coordinate {
     }
 
 
-    //funkar ej perfekt men OK
+
     public boolean hasCollision(Coordinate other) {
         if (other != null && other != this && other.isVisible()) {
             return x < other.getX() + SIZE &&
@@ -41,6 +41,12 @@ public class Coordinate {
                     y < other.getY() + SIZE &&
                     SIZE + y > other.getY();
         }
-        return false;
+        return isOutsideWall();
+    }
+
+    private boolean isOutsideWall() {
+
+        return x + SIZE > 600 || x < 0
+                || y + SIZE > 800 || y < 0;
     }
 }

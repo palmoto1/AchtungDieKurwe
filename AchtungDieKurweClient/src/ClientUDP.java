@@ -1,8 +1,12 @@
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 
 public class ClientUDP implements Runnable {
+    
 
     private static final int DEFAULT_PORT = 2000;
     private static final String DEFAULT_HOST = "127.0.0.1";
@@ -11,8 +15,6 @@ public class ClientUDP implements Runnable {
 
     private DatagramSocket socket;
     private InetAddress address;
-
-    private String userName;
     private Game game;
     private GUI gui;
 
@@ -22,7 +24,7 @@ public class ClientUDP implements Runnable {
     public ClientUDP(String host, int port) {
         this.host = host;
         this.port = port;
-        userName = "August"; // should come from GUI
+
     }
 
     public ClientUDP() {
@@ -42,11 +44,7 @@ public class ClientUDP implements Runnable {
             game = new Game(this);
             gui = new GUI(game);
 
-            String message = createMessage(MessageType.CONNECT, userName);
-            sendData(message.getBytes(StandardCharsets.UTF_8));
-
             running = true;
-            game.start();
 
             new Thread(this).start();
 
@@ -83,32 +81,47 @@ public class ClientUDP implements Runnable {
                 e.printStackTrace();
             }
             String message = new String(packet.getData(), 0, packet.getLength());
-            parsePacket(message, packet.getAddress(), packet.getPort());
+            parse(message, packet.getAddress(), packet.getPort());
 
 
         }
     }
 
-    private void parsePacket(String message, InetAddress address, int port) {
+    private void parse(String message, InetAddress address, int port) {
         String[] tokens = message.split(",");
         String type = tokens[0];
-        String player = tokens[2];
         switch (type) {
             case MessageType.CONNECT:
+                String player = tokens[2];
                 System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
                         + " has connected...");
                 int id = Integer.parseInt(tokens[1]);
-                gui.updatePlayerLabel(player, id, 0);
+                gui.updatePlayerLabel(player + " : " + 0, id);
+                gui.appendChat(player + " has joined!\n\n");
 
+                break;
+            case MessageType.CONNECTION_OK:
+                game.start();
+                break;
+            case MessageType.CONNECTION_DENIED:
+                String error = tokens[1];
+                System.out.println("[" + address.getHostAddress() + ":" + port + "] "
+                        + "got rejected: " + error);
+                gui.appendChat(error);
                 break;
             case MessageType.DISCONNECT:
+                player = tokens[2];
                 System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
                         + " has disconnected...");
-
+                id = Integer.parseInt(tokens[1]);
+                gui.clearPlayerLabel(id);
+                gui.appendChat(player + " has left!\n\n");
                 break;
             case MessageType.READY:
+                player = tokens[1];
                 System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
                         + " is ready...");
+                gui.appendChat(player + " is ready!\n\n");
                 break;
             case MessageType.MOVE:
                 String coordinate = tokens[1];
@@ -118,28 +131,18 @@ public class ClientUDP implements Runnable {
                 game.clearCoordinates();
                 break;
             case MessageType.SCORE_UPDATE:
+                player = tokens[2];
                 id = Integer.parseInt(tokens[1]);
                 int score = Integer.parseInt(tokens[3]);
-                gui.updatePlayerLabel(player, id, score);
+                gui.updatePlayerLabel(player + " : " + score, id);
                 break;
         }
     }
 
-    //move to message handler
-    public String createMessage(String type, String content, String userName){
-        return type + "," + content + "," + userName;
-    }
-    //move to message handler
-    public String createMessage(String type, String userName){
-        return createMessage(type, "", userName);
-    }
+
 
     public void kill() {
-        running = false;
-        socket.close();
-    }
-
-    public String getUserName() {
-        return userName;
+        //running = false;
+        //socket.close();
     }
 }
