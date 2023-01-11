@@ -15,6 +15,7 @@ public class Game extends JPanel implements Runnable {
 
 
     private final ClientUDP client;
+    private GUI gui;
 
     private final LinkedList<Coordinate> coordinates;
     private final MessageHandler messageHandler;
@@ -25,10 +26,15 @@ public class Game extends JPanel implements Runnable {
 
     public Game(ClientUDP client) {
         this.client = client;
+        //gui = new GUI(this);
         coordinates = new LinkedList<>();
         messageHandler = new MessageHandler();
         command = MOVE_FORWARD;
         addKeyListener(new InputHandler());
+    }
+
+    public void setGUI(GUI gui){
+        this.gui = gui;
     }
 
 
@@ -45,6 +51,28 @@ public class Game extends JPanel implements Runnable {
     public void disconnect(){
         String message = messageHandler.createMessage(MessageType.DISCONNECT, userName);
         client.send(message.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public void handleNewPlayer(String player, int id){
+        gui.updatePlayerLabel(player + " : " + 0, id);
+        gui.appendChat(player + " has joined!");
+    }
+
+    public void handleDisconnectedPlayer(String player, int id){
+        gui.clearPlayerLabel(id);
+        gui.appendChat(player + " has left!");
+    }
+
+    public void displayError(String error){
+        gui.appendChat(error);
+    }
+
+    public void handleReadyPlayer(String player){
+        gui.appendChat(player + " is ready!");
+    }
+
+    public void updateScore(String player, int id, int score){
+        gui.updatePlayerLabel(player + " : " + score, id);
     }
 
     public void init(String userName) {

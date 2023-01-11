@@ -15,7 +15,6 @@ public class ClientUDP implements Runnable {
     private DatagramSocket socket;
     private InetAddress address;
     private Game game;
-    private GUI gui;
 
     private boolean running;
 
@@ -33,6 +32,11 @@ public class ClientUDP implements Runnable {
         this.host = host;
         this.port = port;
 
+
+    }
+
+    public void setGame(Game game){
+        this.game = game;
     }
 
 
@@ -40,9 +44,6 @@ public class ClientUDP implements Runnable {
         try {
             this.socket = new DatagramSocket();
             this.address = InetAddress.getByName(host);
-
-            game = new Game(this);
-            gui = new GUI(game);
 
             running = true;
 
@@ -96,9 +97,7 @@ public class ClientUDP implements Runnable {
                 System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
                         + " has connected...");
                 int id = Integer.parseInt(tokens[1]);
-                gui.updatePlayerLabel(player + " : " + 0, id);
-                gui.appendChat(player + " has joined!");
-
+                game.handleNewPlayer(player, id);
                 break;
             case MessageType.CONNECTION_OK:
                 game.start();
@@ -107,21 +106,20 @@ public class ClientUDP implements Runnable {
                 String error = tokens[1];
                 System.out.println("[" + address.getHostAddress() + ":" + port + "] "
                         + "got rejected: " + error);
-                gui.appendChat(error);
+                game.displayError(error);
                 break;
             case MessageType.DISCONNECT:
                 player = tokens[2];
                 System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
                         + " has disconnected...");
                 id = Integer.parseInt(tokens[1]);
-                gui.clearPlayerLabel(id);
-                gui.appendChat(player + " has left!");
+                game.handleDisconnectedPlayer(player, id);
                 break;
             case MessageType.READY:
                 player = tokens[1];
                 System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
                         + " is ready...");
-                gui.appendChat(player + " is ready!");
+                game.handleReadyPlayer(player);
                 break;
             case MessageType.MOVE:
                 String coordinate = tokens[1];
@@ -134,7 +132,7 @@ public class ClientUDP implements Runnable {
                 player = tokens[2];
                 id = Integer.parseInt(tokens[1]);
                 int score = Integer.parseInt(tokens[3]);
-                gui.updatePlayerLabel(player + " : " + score, id);
+                game.updateScore(player, id, score);
                 break;
         }
     }

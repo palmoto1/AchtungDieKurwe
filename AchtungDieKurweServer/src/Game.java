@@ -71,30 +71,13 @@ public class Game {
         }
     }
 
-    private void startGame() {
-        gameStatus = GameStatus.RUNNING;
-        activatePlayers();
-    }
-
     public void checkGameStatus() {
-        if (noPlayersActive() && gameStatus == GameStatus.RUNNING) {
+        if (gameStatus == GameStatus.IDLE && players.size() >= MIN_NUMBER_OF_PLAYERS && allPlayersReady()) {
+            startGame();
+        }
+        if (gameStatus == GameStatus.RUNNING && noPlayersActive()) {
             reloadGame();
         }
-    }
-
-    public void reloadGame() {
-
-        gameStatus = GameStatus.IDLE;
-        coordinates.clear();
-
-        for (Map.Entry<String, Player> set : players.entrySet()) {
-            Player player = set.getValue();
-            player.initialize();
-        }
-        String toSend = messageHandler.createMessage(MessageType.RESTART);
-        sendToAll(toSend.getBytes(StandardCharsets.UTF_8));
-
-        refreshStartingPoints();
     }
 
 
@@ -122,11 +105,27 @@ public class Game {
 
             String toSend = messageHandler.createMessage(MessageType.READY, name);
             sendToAll(toSend.getBytes(StandardCharsets.UTF_8));
-
-            if (players.size() >= MIN_NUMBER_OF_PLAYERS && allPlayersReady()) {
-                startGame();
-            }
         }
+    }
+
+    private void startGame() {
+        gameStatus = GameStatus.RUNNING;
+        activatePlayers();
+    }
+
+    private void reloadGame() {
+
+        gameStatus = GameStatus.IDLE;
+        coordinates.clear();
+
+        for (Map.Entry<String, Player> set : players.entrySet()) {
+            Player player = set.getValue();
+            player.initialize();
+        }
+        String toSend = messageHandler.createMessage(MessageType.RESTART);
+        sendToAll(toSend.getBytes(StandardCharsets.UTF_8));
+
+        refreshStartingPoints();
     }
 
     private void increaseScores() {

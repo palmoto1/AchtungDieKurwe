@@ -14,6 +14,10 @@ public class Main {
             client = new ClientUDP();
         }
 
+        Game game = new Game(client);
+        GUI gui = new GUI(game);
+        game.setGUI(gui);
+        client.setGame(game);
         client.start();
     }
 }

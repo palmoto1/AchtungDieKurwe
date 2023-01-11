@@ -1,13 +1,17 @@
 public class Main {
     public static void main(String[] args) {
-        ServerUDP server;
+        ServerUDP serverUDP;
+        ServerTCP serverTCP;
 
         if (args.length > 0) {
-            server = new ServerUDP(Integer.parseInt(args[0]));
+            serverUDP = new ServerUDP(Integer.parseInt(args[0]));
+            serverTCP = new ServerTCP(Integer.parseInt(args[0]));
         } else {
-            server = new ServerUDP();
+            serverUDP = new ServerUDP();
+            serverTCP = new ServerTCP();
         }
 
-        server.start();
+        serverUDP.start();
+        //serverTCP.start();
     }
 }

@@ -4,7 +4,7 @@ public final class MessageType {
     private MessageType(){}
 
     public static final String CONNECT = "connect";
-    public static final String CONNECTION_DENIED = "rejected";
+    public static final String CONNECTION_DENIED = "denied";
     public static final String CONNECTION_OK = "ok";
     public static final String MOVE = "move";
     public static final String DISCONNECT = "disconnect";

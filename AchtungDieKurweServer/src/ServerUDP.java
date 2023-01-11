@@ -57,10 +57,10 @@ public class ServerUDP implements Runnable {
             String message = new String(packet.getData(), 0, packet.getLength());
             parse(message, packet.getAddress(), packet.getPort());
             game.checkGameStatus();
-
         }
     }
 
+    // own class?
     private void parse(String message, InetAddress address, int port) {
         String[] tokens = message.split(",");
         String type = tokens[0];
