@@ -37,7 +37,7 @@ public class ServerUDP implements Runnable {
         }
         running = true;
         thread.start();
-        System.out.println("Server started on port " + port);
+        System.out.println("Game server started on port " + port);
     }
 
     public void kill() {

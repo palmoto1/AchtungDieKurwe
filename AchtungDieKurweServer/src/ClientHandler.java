@@ -37,11 +37,9 @@ public class ClientHandler implements Runnable {
             out = new PrintWriter(outputStreamWriter, true);
             name = in.readLine();
 
-            server.broadcast("New user connected: " + name, this);
-
             String clientMessage = "";
 
-            while (clientMessage != null && !clientMessage.equals(END_COMMAND)) {
+            while (clientMessage != null) {
                 clientMessage = in.readLine();
                 server.broadcast(name + ": " + clientMessage, this);
                 Thread.sleep(100);
@@ -54,7 +52,6 @@ public class ClientHandler implements Runnable {
 
         } catch (SocketException socketException) {
             System.out.println("User connection lost!");
-            socketException.printStackTrace();
         } catch (IOException ioException) {
             System.err.println("User error: " + ioException.getMessage());
             ioException.printStackTrace();
@@ -63,7 +60,6 @@ public class ClientHandler implements Runnable {
         }
 
         server.removeThread(this);
-        server.broadcast(name + " has quit!", this);
 
     }
 
@@ -83,7 +79,7 @@ public class ClientHandler implements Runnable {
         if (!(o instanceof ClientHandler other)) {
             return false;
          }
-        return name.equals(other.name);
+        return Objects.equals(name, other.name);
     }
 
     @Override

@@ -13,9 +13,8 @@ public class ClientHandlerList {
 
     public synchronized void broadcast(String msg, ClientHandler clientHandler) {
         for (ClientHandler u : clientHandlers) {
-            if (!u.equals(clientHandler)) {
-                u.printMessage(msg);
-            }
+            u.printMessage(msg);
+
         }
     }
 

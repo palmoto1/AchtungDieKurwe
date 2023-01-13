@@ -1,21 +1,36 @@
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 
-public class ClientTCP {
+public class ClientTCP implements Runnable {
 
     private static final int DEFAULT_PORT = 2001;
     private static final String DEFAULT_HOST = "127.0.0.1";
 
+    private final Thread thread;
+
     private final String host;
     private final int port;
 
+    private Socket socket;
+
+    private BufferedReader in;
+    private PrintWriter out;
+
+
+    private Chat chat;
+
     private String user;
+
+    private boolean running;
 
 
     public ClientTCP(String host, int port) {
         this.host = host;
         this.port = port;
+        running = false;
+        thread = new Thread(this);
     }
 
     public ClientTCP() {
@@ -26,48 +41,80 @@ public class ClientTCP {
         this(host, DEFAULT_PORT);
     }
 
-    public static void main(String[] args) {
 
-        ClientTCP clientTCP;
+    public void start() {
+        try {
+            socket = new Socket(host, port);
 
-        if (args.length >= 2) {
-            clientTCP = new ClientTCP(args[0], Integer.parseInt(args[1]));
-        } else if (args.length == 1) {
-            clientTCP = new ClientTCP(args[0]);
-        } else {
-            clientTCP = new ClientTCP();
+            InputStream inputStream = socket.getInputStream();
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            in = new BufferedReader(inputStreamReader);
+
+            OutputStream outputStream = socket.getOutputStream();
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
+                    outputStream,
+                    StandardCharsets.ISO_8859_1
+            );
+            out = new PrintWriter(outputStreamWriter, true);
+        } catch (IOException ioException) {
+            System.err.println("IO exception while connecting to server: " + ioException.getMessage());
+            ioException.printStackTrace();
         }
-
-        clientTCP.run();
+        running = true;
+        thread.start();
     }
-
-
 
 
     public void run() {
 
-        try {
-            Socket socket = new Socket(host, port);
+        write(user);
 
-            new ClientReader(this, socket);
-            new ClientWriter(this, socket);
+        while (running) {
+            try {
+                String response = in.readLine();
+                chat.append(response);
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
 
-
-        } catch (UnknownHostException ex) {
-            System.out.println("Server not found: " + ex.getMessage());
-        } catch (IOException ex) {
-            System.out.println("I/O Error: " + ex.getMessage());
+            } catch (IOException ioException) {
+                System.err.println("IO error while reading: " + ioException.getMessage());
+                kill();
+            }
         }
 
 
     }
 
-    public String getUser() {
-        return user;
+    public void setChat(Chat gui) {
+        this.chat = gui;
     }
 
     public void setUser(String user) {
         this.user = user;
+    }
+
+    public void write(String text) {
+        out.println(text);
+        out.flush();
+    }
+
+    public void kill() {
+        running = false;
+
+        try {
+            out.close();
+            in.close();
+            socket.close();
+        } catch (IOException ioException) {
+            System.err.println("IOException generated: " + ioException);
+            ioException.printStackTrace();
+        }
+
+        System.exit(1);
     }
 }
 

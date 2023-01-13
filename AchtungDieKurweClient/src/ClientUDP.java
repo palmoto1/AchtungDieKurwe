@@ -137,7 +137,13 @@ public class ClientUDP implements Runnable {
         }
     }
 
+    public String getHost() {
+        return host;
+    }
 
+    public int getPort() {
+        return port;
+    }
 
     public void kill() {
         //running = false;

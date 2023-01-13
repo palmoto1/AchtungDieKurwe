@@ -12,6 +12,6 @@ public class Main {
         }
 
         serverUDP.start();
-        //serverTCP.start();
+        serverTCP.start();
     }
 }

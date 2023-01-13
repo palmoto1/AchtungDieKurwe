@@ -14,8 +14,9 @@ public class Game extends JPanel implements Runnable {
     private static final int TURN_RIGHT = 2;
 
 
-    private final ClientUDP client;
-    private GUI gui;
+    private final ClientUDP clientUDP;
+    private GUI gui; // fult, flytta funtionalitet som gäller game hit från gui,
+    // ha chat referens istället, löser mycket fula problem
 
     private final LinkedList<Coordinate> coordinates;
     private final MessageHandler messageHandler;
@@ -24,12 +25,13 @@ public class Game extends JPanel implements Runnable {
     private int command;
     private boolean running;
 
-    public Game(ClientUDP client) {
-        this.client = client;
-        //gui = new GUI(this);
+    public Game(ClientUDP clientUDP) {
+        this.clientUDP = clientUDP;
         coordinates = new LinkedList<>();
         messageHandler = new MessageHandler();
         command = MOVE_FORWARD;
+
+        setBackground(Color.black);
         addKeyListener(new InputHandler());
     }
 
@@ -38,19 +40,21 @@ public class Game extends JPanel implements Runnable {
     }
 
 
+
     public void start() {
         running = true;
+        gui.startChat();
         new Thread(this).start();
     }
 
     public void connect(){
         String message = messageHandler.createMessage(MessageType.CONNECT, userName);
-        client.send(message.getBytes(StandardCharsets.UTF_8));
+        clientUDP.send(message.getBytes(StandardCharsets.UTF_8));
     }
 
     public void disconnect(){
         String message = messageHandler.createMessage(MessageType.DISCONNECT, userName);
-        client.send(message.getBytes(StandardCharsets.UTF_8));
+        clientUDP.send(message.getBytes(StandardCharsets.UTF_8));
     }
 
     public void handleNewPlayer(String player, int id){
@@ -75,13 +79,14 @@ public class Game extends JPanel implements Runnable {
         gui.updatePlayerLabel(player + " : " + score, id);
     }
 
-    public void init(String userName) {
+    public void setUserName(String userName){
         this.userName = userName;
-        connect();
     }
+
+
     public void setReady(){
         String ready = messageHandler.createMessage(MessageType.READY, userName);
-        client.send(ready.getBytes(StandardCharsets.UTF_8));
+        clientUDP.send(ready.getBytes(StandardCharsets.UTF_8));
     }
 
 
@@ -92,7 +97,7 @@ public class Game extends JPanel implements Runnable {
         while (running) {
             repaint();
             String message = messageHandler.createMessage(MessageType.MOVE, String.valueOf(command), userName);
-            client.send(message.getBytes(StandardCharsets.UTF_8));
+            clientUDP.send(message.getBytes(StandardCharsets.UTF_8));
             try {
                 Thread.sleep(5);
             } catch (InterruptedException e) {

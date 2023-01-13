@@ -62,7 +62,7 @@ public class Game {
     public void removePlayer(String name) {
         Player player = findPlayer(name);
         if (player != null) {
-            players.remove(name);
+            Player r = players.remove(name);
 
             String toSend = messageHandler.createMessage(MessageType.DISCONNECT, String.valueOf(player.getId()), name);
             sendToAll(toSend.getBytes(StandardCharsets.UTF_8));

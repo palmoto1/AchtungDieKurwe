@@ -4,20 +4,30 @@ public class Main {
 
 
 
-        ClientUDP client;
+        ClientUDP clientUDP;
+        ClientTCP clientTCP;
 
         if (args.length >= 2) {
-            client = new ClientUDP(args[0], Integer.parseInt(args[1]));
+            clientUDP = new ClientUDP(args[0], Integer.parseInt(args[1]));
+            clientTCP = new ClientTCP(args[0], Integer.parseInt(args[1]));
         } else if (args.length == 1) {
-            client = new ClientUDP(args[0]);
+            clientUDP = new ClientUDP(args[0]);
+            clientTCP = new ClientTCP(args[0]);
         } else {
-            client = new ClientUDP();
+            clientUDP = new ClientUDP();
+            clientTCP = new ClientTCP();
         }
 
-        Game game = new Game(client);
-        GUI gui = new GUI(game);
-        game.setGUI(gui);
-        client.setGame(game);
-        client.start();
+        //lite rörigt detta, se om går att göra bättre
+        Game game = new Game(clientUDP);
+        Chat chat = new Chat(clientTCP);
+        GUI gui = new GUI(game, chat);
+
+        game.setGUI(gui); //fult
+
+        clientUDP.setGame(game);
+        clientTCP.setChat(chat);
+
+        clientUDP.start();
     }
 }

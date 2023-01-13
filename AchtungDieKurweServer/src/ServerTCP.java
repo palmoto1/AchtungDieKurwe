@@ -41,11 +41,11 @@ public class ServerTCP implements Runnable {
     @Override
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Server started on port " + port);
+            System.out.println("Chat server started on port " + port);
 
             while (running) {
                 Socket socket = serverSocket.accept();
-                System.out.println("Connecting new user!");
+                //System.out.println("Connecting new chat user!");
                 addThread(new ClientHandler(socket, this));
                 Thread.sleep(100);
 
