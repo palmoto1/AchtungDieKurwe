@@ -61,7 +61,7 @@ public class ClientTCP implements Runnable {
             ioException.printStackTrace();
         }
         running = true;
-        thread.start();
+        new Thread(this).start();
     }
 
 

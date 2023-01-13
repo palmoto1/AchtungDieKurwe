@@ -35,8 +35,8 @@ public class ClientUDP implements Runnable {
 
     }
 
-    public void setGame(Game game){
-        this.game = game;
+    public void setGame(Game gamePanel){
+        this.game = gamePanel;
     }
 
 

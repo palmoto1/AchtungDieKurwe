@@ -21,12 +21,9 @@ public class Main {
         //lite rörigt detta, se om går att göra bättre
         Game game = new Game(clientUDP);
         Chat chat = new Chat(clientTCP);
-        GUI gui = new GUI(game, chat);
 
-        game.setGUI(gui); //fult
+        new GUI(game, chat);
 
-        clientUDP.setGame(game);
-        clientTCP.setChat(chat);
 
         clientUDP.start();
     }

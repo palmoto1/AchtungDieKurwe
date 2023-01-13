@@ -1,7 +1,8 @@
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+//game
 
 public class GUI extends JFrame {
 
@@ -10,31 +11,16 @@ public class GUI extends JFrame {
     private final Game game;
     private final Chat chat;
 
-    private final JLabel[] playerLabels;
-    private final Font font;
-
     public GUI(Game game, Chat chat) {
         this.game = game;
+        this.chat = chat;
 
         setTitle("Achtung Die Kurwe!");
         setSize(WIDTH, HEIGHT);
 
-        playerLabels = new JLabel[6];
-        font = new Font("Verdana", Font.BOLD, 20);
+        this.chat.setButtonListener(new ButtonListener());
 
-        for (int i = 0, x = 100; i < playerLabels.length; i++) {
-            playerLabels[i] = new JLabel("");
-            playerLabels[i].setFont(font);
-            Dimension size = playerLabels[i].getPreferredSize();
-            playerLabels[i].setBounds(x, 0, size.width, size.height);
-            this.game.add(playerLabels[i]);
-            x += 100;
-        }
-
-        this.chat = chat; // maybe should be own class
-        chat.setButtonListener(new ButtonListener());
-
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.game, chat);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.game, this.chat);
         splitPane.setDividerLocation(600);
 
         add(splitPane);
@@ -46,40 +32,19 @@ public class GUI extends JFrame {
         });
 
         setVisible(true);
-        chat.setFocusable(true);
+        this.chat.setFocusable(true);
         this.game.setFocusable(true);
-    }
-
-
-    public void updatePlayerLabel(String text, int id) {
-        JLabel label = playerLabels[id % playerLabels.length];
-        label.setText(text);
-        label.setForeground(ColorHandler.getColor(id));
-
-    }
-
-    public void clearPlayerLabel(int id) {
-        JLabel label = playerLabels[id % playerLabels.length];
-        label.setText("");
-
-    }
-
-    public void startChat(){
-        chat.startChatClient();
-    }
-
-    public void appendChat(String text){
-        chat.append(text);
+        this.game.setChat(this.chat);
     }
 
     public class ButtonListener implements ActionListener {
 
         @Override
-        public void actionPerformed(ActionEvent e) { // fixa detta så username måste godkännas innan start
+        public void actionPerformed(ActionEvent e) {
             if (!chat.getInputText().isBlank()) {
                 if (!game.isRunning()) {
                     game.setUserName(chat.getInputText().trim());
-                    chat.setUserName(chat.getInputText().trim()); // KAN FIXAS I GAME
+                    chat.setUserName(chat.getInputText().trim());
                     game.connect();
                 } else {
                     chat.getClientTCP().write(chat.getInputText());

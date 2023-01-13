@@ -2,16 +2,19 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
+//chat handler
+
 public class Chat extends JPanel {
 
-    private ClientTCP clientTCP;
-    private JTextArea chatArea;
-    private JTextField inputText;
+    private final ClientTCP clientTCP;
+    private final JTextArea chatArea;
+    private final JTextField inputText;
 
-    private JButton jButton;
+    private final JButton jButton;
 
     public Chat(ClientTCP clientTCP){
         this.clientTCP = clientTCP;
+        this.clientTCP.setChat(this);
         JLabel inputLabel = new JLabel("Chat:");
         inputText = new JTextField(16);
         chatArea = new JTextArea(30, 16);

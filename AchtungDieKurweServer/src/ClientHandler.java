@@ -8,8 +8,6 @@ import java.util.Objects;
 public class ClientHandler implements Runnable {
 
 
-    private static final String END_COMMAND = "exit";
-
     private final Thread thread;
     private final Socket socket;
     private final ServerTCP server;

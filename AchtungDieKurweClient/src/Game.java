@@ -5,6 +5,8 @@ import java.awt.event.KeyListener;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
+//game handler
+
 
 //behöver verkligen vara trådad? kan repainta o skicka i clientens loop? behövs syncronized?
 public class Game extends JPanel implements Runnable {
@@ -15,8 +17,12 @@ public class Game extends JPanel implements Runnable {
 
 
     private final ClientUDP clientUDP;
-    private GUI gui; // fult, flytta funtionalitet som gäller game hit från gui,
-    // ha chat referens istället, löser mycket fula problem
+    //private GUI gui; // fult, flytta funtionalitet som gäller game hit från gui,
+    // ha chat referens istället, löser mycket fula problem. Kanske behöver ha labels här istället
+
+    private Chat chat;
+
+    private final JLabel[] playerLabels;
 
     private final LinkedList<Coordinate> coordinates;
     private final MessageHandler messageHandler;
@@ -27,23 +33,38 @@ public class Game extends JPanel implements Runnable {
 
     public Game(ClientUDP clientUDP) {
         this.clientUDP = clientUDP;
+        this.clientUDP.setGame(this);
         coordinates = new LinkedList<>();
         messageHandler = new MessageHandler();
         command = MOVE_FORWARD;
 
         setBackground(Color.black);
         addKeyListener(new InputHandler());
+
+        playerLabels = new JLabel[6];
+        Font font = new Font("Verdana", Font.BOLD, 20);
+
+        for (int i = 0, x = 100; i < playerLabels.length; i++) {
+            playerLabels[i] = new JLabel("");
+            playerLabels[i].setFont(font);
+            Dimension size = playerLabels[i].getPreferredSize();
+            playerLabels[i].setBounds(x, 0, size.width, size.height);
+            add(playerLabels[i]);
+            x += 100;
+        }
+
+        //new GUI(this, chat);
     }
 
-    public void setGUI(GUI gui){
-        this.gui = gui;
+    public void setChat(Chat chat){
+        this.chat = chat;
     }
 
 
 
     public void start() {
         running = true;
-        gui.startChat();
+        chat.startChatClient();
         new Thread(this).start();
     }
 
@@ -58,35 +79,47 @@ public class Game extends JPanel implements Runnable {
     }
 
     public void handleNewPlayer(String player, int id){
-        gui.updatePlayerLabel(player + " : " + 0, id);
-        gui.appendChat(player + " has joined!");
+        updatePlayerLabel(player + " : " + 0, id);
+        chat.append(player + " has joined!");
     }
 
     public void handleDisconnectedPlayer(String player, int id){
-        gui.clearPlayerLabel(id);
-        gui.appendChat(player + " has left!");
+        clearPlayerLabel(id);
+        chat.append(player + " has left!");
+    }
+
+    public void setReady(){
+        String ready = messageHandler.createMessage(MessageType.READY, userName);
+        clientUDP.send(ready.getBytes(StandardCharsets.UTF_8));
     }
 
     public void displayError(String error){
-        gui.appendChat(error);
+        chat.append(error);
     }
 
     public void handleReadyPlayer(String player){
-        gui.appendChat(player + " is ready!");
+        chat.append(player + " is ready!");
     }
 
     public void updateScore(String player, int id, int score){
-        gui.updatePlayerLabel(player + " : " + score, id);
+        updatePlayerLabel(player + " : " + score, id);
     }
 
     public void setUserName(String userName){
         this.userName = userName;
     }
 
+    public void updatePlayerLabel(String text, int id) {
+        JLabel label = playerLabels[id % playerLabels.length];
+        label.setText(text);
+        label.setForeground(ColorHandler.getColor(id));
 
-    public void setReady(){
-        String ready = messageHandler.createMessage(MessageType.READY, userName);
-        clientUDP.send(ready.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public void clearPlayerLabel(int id) {
+        JLabel label = playerLabels[id % playerLabels.length];
+        label.setText("");
+
     }
 
 
