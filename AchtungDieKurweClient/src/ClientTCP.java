@@ -8,8 +8,6 @@ public class ClientTCP implements Runnable {
     private static final int DEFAULT_PORT = 2001;
     private static final String DEFAULT_HOST = "127.0.0.1";
 
-    private final Thread thread;
-
     private final String host;
     private final int port;
 
@@ -30,7 +28,6 @@ public class ClientTCP implements Runnable {
         this.host = host;
         this.port = port;
         running = false;
-        thread = new Thread(this);
     }
 
     public ClientTCP() {
