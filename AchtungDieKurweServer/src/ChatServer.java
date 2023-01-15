@@ -3,10 +3,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 
-//TODO: write comments, dela upp i två delar o anpassa för det, dela upp metoder mer t.ex. fixa loopar med sleep o kill
-// testa att allt funkar bra
+/**
+ * Server handling the chat via TCP-protocol
+ */
 
-public class ServerTCP implements Runnable {
+public class ChatServer implements Runnable {
 
 
     private static final int DEFAULT_PORT = 2001;
@@ -19,25 +20,30 @@ public class ServerTCP implements Runnable {
     private boolean running;
 
 
-    public ServerTCP(int port) {
+    public ChatServer(int port) {
         this.port = port;
         thread = new Thread(this);
         clientHandlerList = new ClientHandlerList();
     }
 
-    public ServerTCP() {
+    public ChatServer() {
         this(DEFAULT_PORT);
     }
 
+
+    /**
+     * Starts the thread
+     */
     public void start() {
         thread.start();
         running = true;
     }
 
-    public void kill() {
-        running = false;
-    }
 
+    /**
+     * Listens for a new client to connect to the server.
+     * Creates and adds a new ClientHandler for the client
+     */
     @Override
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
@@ -45,31 +51,35 @@ public class ServerTCP implements Runnable {
 
             while (running) {
                 Socket socket = serverSocket.accept();
-                //System.out.println("Connecting new chat user!");
-                addThread(new ClientHandler(socket, this));
-                Thread.sleep(100);
-
+                addClient(new ClientHandler(socket, this));
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
 
         } catch (IOException ioException) {
             System.err.println("Server error: " + ioException.getMessage());
             ioException.printStackTrace();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 
 
-    public void broadcast(String msg, ClientHandler clientHandler) {
-        clientHandlerList.broadcast(msg, clientHandler);
+    /**
+     * Broadcasts a message to all clients
+     * @param message the message to be sent
+     */
+    public void broadcast(String message) {
+        clientHandlerList.sendToAll(message);
     }
 
-    public void removeThread(ClientHandler clientHandler) {
-        clientHandlerList.removeThread(clientHandler);
+    public void removeClient(ClientHandler clientHandler) {
+        clientHandlerList.remove(clientHandler);
     }
 
-    public void addThread(ClientHandler clientHandler) {
+    public void addClient(ClientHandler clientHandler) {
 
-        clientHandlerList.addThread(clientHandler);
+        clientHandlerList.add(clientHandler);
     }
 }

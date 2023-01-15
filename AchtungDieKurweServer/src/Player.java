@@ -21,16 +21,23 @@ public class Player {
         initialize();
     }
 
+    /**
+     * Initializes the player and creates a new snake
+     */
     public void initialize() {
         ready = false;
         active = false;
         snake = new Snake(id);
     }
 
+    /**
+     * Makes a call to update snake position and move the snake
+     * @param data data containing the command
+     */
     public void move(String data) {
         int command = Integer.parseInt(data);
         snake.setDirection(command);
-        snake.update();
+        snake.move();
     }
 
     public InetAddress getAddress() {

@@ -5,9 +5,10 @@ import java.net.InetAddress;
 import java.net.SocketException;
 
 
-//TODO: fix chat server/clent
-
-public class ServerUDP implements Runnable {
+/**
+ * Server handling the game state and game logic via UDP-protocol
+ */
+public class GameServer implements Runnable {
 
 
     private static final int DEFAULT_PORT = 2000;
@@ -18,17 +19,21 @@ public class ServerUDP implements Runnable {
     private boolean running;
     private final Game game;
 
-    public ServerUDP(int port) {
+    public GameServer(int port) {
         this.port = port;
         thread = new Thread(this);
         game = new Game(this);
 
     }
 
-    public ServerUDP() {
+    public GameServer() {
         this(DEFAULT_PORT);
     }
 
+
+    /**
+     * Creates a socket for the port and starts the thread.
+     */
     public void start() {
         try {
             this.socket = new DatagramSocket(port);
@@ -40,10 +45,11 @@ public class ServerUDP implements Runnable {
         System.out.println("Game server started on port " + port);
     }
 
-    public void kill() {
-        running = false;
-    }
 
+    /**
+     * Continuously listens for packets to receive.
+     * Parses the message packet and checks the game status
+     */
     @Override
     public void run() {
         while (running) {
@@ -60,7 +66,13 @@ public class ServerUDP implements Runnable {
         }
     }
 
-    // own class?
+    /**
+     * Parses a message and handles according to the message type of the packet.
+     *
+     * @param message the message to be parsed
+     * @param address the host address from where the packet was sent
+     * @param port the port from where the packet was sent
+     */
     private void parse(String message, InetAddress address, int port) {
         String[] tokens = message.split(",");
         String type = tokens[0];
@@ -91,6 +103,12 @@ public class ServerUDP implements Runnable {
         }
     }
 
+    /**
+     * Sends a packet
+     * @param data the data to be sent as a byte array
+     * @param ipAddress the host address of where the packet should be sent
+     * @param port the port of where the packet should be sent
+     */
     public void send(byte[] data, InetAddress ipAddress, int port) {
 
         DatagramPacket packet = new DatagramPacket(data, data.length, ipAddress, port);

@@ -14,13 +14,13 @@ public class Game {
     private static final int MAX_NUMBER_OF_PLAYERS = 6;
     private static int NextID = 0;
 
-    private final ServerUDP server;
+    private final GameServer server;
     private final HashMap<String, Player> players;
     private final ArrayList<Coordinate> coordinates;
     private final MessageHandler messageHandler;
     private GameStatus gameStatus;
 
-    public Game(ServerUDP server) {
+    public Game(GameServer server) {
         this.server = server;
         players = new HashMap<>();
         coordinates = new ArrayList<>();

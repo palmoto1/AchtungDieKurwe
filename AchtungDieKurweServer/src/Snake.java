@@ -7,7 +7,6 @@ public class Snake {
     private static final int VISIBLE = 1;
     private static final int NOT_VISIBLE = 0;
     private static final int INTERVAL = 100;
-    private static final double SPEED = 1;
     private static final int DIR_CHANGE = 2;
 
     private static final Random RANDOM = new Random();
@@ -29,6 +28,10 @@ public class Snake {
         intervalCounter = 0;
     }
 
+    /**
+     * Sets the direction of the snake based on direction commands
+     * @param command the direction command
+     */
     public void setDirection(int command) {
         if (command == TURN_LEFT) {
             direction -= DIR_CHANGE + 360;
@@ -37,10 +40,14 @@ public class Snake {
         }
     }
 
-    public void update() {
+    /**
+     * Updates the snake so that it moves forward point by point.
+     * Makes so that holes appears in the snake every time the interval count is reached
+     */
+    public void move() {
         direction %= 360;
-        double x = SPEED * Math.cos(Math.toRadians(direction));
-        double y = SPEED * Math.sin(Math.toRadians(direction));
+        double x = Math.cos(Math.toRadians(direction));
+        double y = Math.sin(Math.toRadians(direction));
 
         int visible = VISIBLE;
 
@@ -52,7 +59,12 @@ public class Snake {
         }
         intervalCounter++;
 
-        head = new Coordinate(head.getX() + x, head.getY() + y, visible, playerId);
+        head = new Coordinate(
+                head.getX() + x,
+                head.getY() + y,
+                visible,
+                playerId
+        );
 
     }
     public Coordinate getHead() {

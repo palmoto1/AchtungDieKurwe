@@ -6,20 +6,19 @@ import java.awt.event.ActionListener;
 
 public class Chat extends JPanel {
 
-    private final ClientTCP clientTCP;
+    private final ChatClient chatClient;
     private final JTextArea chatArea;
     private final JTextField inputText;
 
     private final JButton jButton;
 
-    public Chat(ClientTCP clientTCP){
-        this.clientTCP = clientTCP;
-        this.clientTCP.setChat(this);
+    public Chat(ChatClient chatClient){
+        this.chatClient = chatClient;
+        this.chatClient.setChat(this);
         JLabel inputLabel = new JLabel("Chat:");
         inputText = new JTextField(16);
         chatArea = new JTextArea(30, 16);
         jButton = new JButton("Submit");
-        //buttonAdd.getModel().addChangeListener(new ButtonListener());
 
         chatArea.setEditable(false);
         chatArea.setBackground(Color.LIGHT_GRAY);
@@ -33,15 +32,15 @@ public class Chat extends JPanel {
     }
 
     public void setUserName(String userName) {
-        clientTCP.setUser(userName);
+        chatClient.setUser(userName);
     }
 
     public void startChatClient(){
-        clientTCP.start();
+        chatClient.start();
     }
 
-    public ClientTCP getClientTCP() {
-        return clientTCP;
+    public ChatClient getClientTCP() {
+        return chatClient;
     }
 
     public void setButtonListener(ActionListener actionListener){

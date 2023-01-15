@@ -1,5 +1,9 @@
 public class Coordinate {
 
+    /**
+     * Representing a coordinate making up the snakes body
+     */
+
 
     private static final double SIZE = 0.5;
     private static final int WINDOW_WIDTH = 600;
@@ -29,8 +33,11 @@ public class Coordinate {
     }
 
 
-
-
+    /**
+     * Checks if the coordinate has collided with another coordinate or the borders of the game
+     * @param other the other coordinate
+     * @return true or false
+     */
     public boolean hasCollision(Coordinate other) {
         if (other != null && other != this && other.isVisible()) {
             return x < other.getX() + SIZE &&
@@ -41,6 +48,11 @@ public class Coordinate {
         return isOutsideWall();
     }
 
+
+    /**
+     * Checks if the coordinate is outside the boundary of the game
+     * @return true or false
+     */
     private boolean isOutsideWall() {
         return x + SIZE > WINDOW_WIDTH || x < 0
                 || y + SIZE > WINDOW_HEIGHT || y < 0;

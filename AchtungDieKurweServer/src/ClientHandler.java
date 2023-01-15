@@ -10,21 +10,22 @@ public class ClientHandler implements Runnable {
 
     private final Thread thread;
     private final Socket socket;
-    private final ServerTCP server;
+    private final ChatServer server;
     private String name;
     private PrintWriter out;
     private BufferedReader in;
 
-    public ClientHandler(Socket socket, ServerTCP server) {
+    public ClientHandler(Socket socket, ChatServer server) {
         this.socket = socket;
         this.server = server;
         thread = new Thread(this);
-        thread.start();
+        start();
     }
 
-    // dela upp
-    @Override
-    public void run() {
+    /**
+     * Connects the ClientHandler with the client and starts the thread
+     */
+    public void start() {
         try {
             InputStream inputStream = socket.getInputStream();
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
@@ -33,31 +34,41 @@ public class ClientHandler implements Runnable {
             OutputStream outputStream = socket.getOutputStream();
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, StandardCharsets.ISO_8859_1);
             out = new PrintWriter(outputStreamWriter, true);
+
             name = in.readLine();
+        } catch (SocketException socketException) {
+            System.out.println("User connection lost!");
+        } catch (IOException ioException) {
+            System.err.println(ioException.getMessage());
+            ioException.printStackTrace();
+        }
+        thread.start();
+    }
+
+    /**
+     * Listens for messages from the connected client and broadcasts them to all other clients.
+     * If the client disconnects the ClientHandler stops running and is disposed.
+     */
+    @Override
+    public void run() {
+        try {
+
 
             String clientMessage = "";
 
             while (clientMessage != null) {
                 clientMessage = in.readLine();
-                server.broadcast(name + ": " + clientMessage, this);
+                server.broadcast(name + ": " + clientMessage);
+                try {
                 Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
-
-            out.close();
-            in.close();
-            socket.close();
-
-
-        } catch (SocketException socketException) {
-            System.out.println("User connection lost!");
         } catch (IOException ioException) {
-            System.err.println("User error: " + ioException.getMessage());
-            ioException.printStackTrace();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            System.out.println("User connection lost!");
         }
-
-        server.removeThread(this);
+        dispose();
 
     }
 
@@ -65,8 +76,31 @@ public class ClientHandler implements Runnable {
         return name;
     }
 
-    public void printMessage(String msg) {
-        out.println(msg);
+    /**
+     * Writes a message to the client via the output stream
+     * @param message the message to be sent
+     */
+    public void printMessage(String message) {
+        out.println(message);
+        out.flush();
+    }
+
+    /**
+     * Closes streams and socket.
+     * Removes the ClientHandler from the server.
+     */
+    public void dispose() {
+        try {
+            out.close();
+            in.close();
+            socket.close();
+        } catch (SocketException socketException) {
+            System.out.println("User connection lost!");
+        } catch (IOException ioException) {
+            System.err.println("User error: " + ioException.getMessage());
+            ioException.printStackTrace();
+        }
+        server.removeClient(this);
     }
 
     @Override

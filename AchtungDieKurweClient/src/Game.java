@@ -5,10 +5,6 @@ import java.awt.event.KeyListener;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
-//game handler
-
-
-//behöver verkligen vara trådad? kan repainta o skicka i clientens loop? behövs syncronized?
 public class Game extends JPanel implements Runnable {
 
     private static final int MOVE_FORWARD = 0;
@@ -16,10 +12,7 @@ public class Game extends JPanel implements Runnable {
     private static final int TURN_RIGHT = 2;
 
 
-    private final ClientUDP clientUDP;
-    //private GUI gui; // fult, flytta funtionalitet som gäller game hit från gui,
-    // ha chat referens istället, löser mycket fula problem. Kanske behöver ha labels här istället
-
+    private final GameClient gameClient;
     private Chat chat;
 
     private final JLabel[] playerLabels;
@@ -31,9 +24,9 @@ public class Game extends JPanel implements Runnable {
     private int command;
     private boolean running;
 
-    public Game(ClientUDP clientUDP) {
-        this.clientUDP = clientUDP;
-        this.clientUDP.setGame(this);
+    public Game(GameClient gameClient) {
+        this.gameClient = gameClient;
+        this.gameClient.setGame(this);
         coordinates = new LinkedList<>();
         messageHandler = new MessageHandler();
         command = MOVE_FORWARD;
@@ -52,8 +45,6 @@ public class Game extends JPanel implements Runnable {
             add(playerLabels[i]);
             x += 100;
         }
-
-        //new GUI(this, chat);
     }
 
     public void setChat(Chat chat){
@@ -61,36 +52,54 @@ public class Game extends JPanel implements Runnable {
     }
 
 
-
+    /**
+     * Starts the thread and the chat client
+     */
     public void start() {
         running = true;
         chat.startChatClient();
         new Thread(this).start();
     }
 
+
+    /**
+     * Creates a message for connection and sends it to the server
+     */
     public void connect(){
         String message = messageHandler.createMessage(MessageType.CONNECT, userName);
-        clientUDP.send(message.getBytes(StandardCharsets.UTF_8));
+        gameClient.send(message.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Creates a message for disconnection and sends it to the server
+     */
     public void disconnect(){
         String message = messageHandler.createMessage(MessageType.DISCONNECT, userName);
-        clientUDP.send(message.getBytes(StandardCharsets.UTF_8));
+        gameClient.send(message.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Makes the game output that a new player has joined
+     */
     public void handleNewPlayer(String player, int id){
         updatePlayerLabel(player + " : " + 0, id);
         chat.append(player + " has joined!");
     }
 
+    /**
+     * Makes the game output that a player has quit
+     */
     public void handleDisconnectedPlayer(String player, int id){
         clearPlayerLabel(id);
         chat.append(player + " has left!");
     }
 
+    /**
+     * Creates a message that the player is ready and sends it to the server
+     */
     public void setReady(){
         String ready = messageHandler.createMessage(MessageType.READY, userName);
-        clientUDP.send(ready.getBytes(StandardCharsets.UTF_8));
+        gameClient.send(ready.getBytes(StandardCharsets.UTF_8));
     }
 
     public void displayError(String error){
@@ -123,6 +132,9 @@ public class Game extends JPanel implements Runnable {
     }
 
 
+    /**
+     * Continuously repaints the game and sends the current move direction
+     */
     @Override
     public void run() {
         System.out.println("Starting Game!");
@@ -130,7 +142,7 @@ public class Game extends JPanel implements Runnable {
         while (running) {
             repaint();
             String message = messageHandler.createMessage(MessageType.MOVE, String.valueOf(command), userName);
-            clientUDP.send(message.getBytes(StandardCharsets.UTF_8));
+            gameClient.send(message.getBytes(StandardCharsets.UTF_8));
             try {
                 Thread.sleep(5);
             } catch (InterruptedException e) {
@@ -146,15 +158,24 @@ public class Game extends JPanel implements Runnable {
         paintCoordinates(g);
     }
 
+
+    /**
+     * Draws all coordinates in the collection of coordinates
+     * @param g the graphic
+     */
     public synchronized void paintCoordinates(Graphics g) {
-        for (Coordinate c : coordinates) {
-            if (c.isVisible()) {
-                c.paint(g);
+        for (Coordinate coordinate : coordinates) {
+            if (coordinate.isVisible()) {
+                coordinate.paint(g);
             }
         }
     }
 
 
+    /**
+     * adds a new coordinate received from the server
+     * @param data
+     */
     public synchronized void addCoordinate(String data) {
         Coordinate coordinate = parseCoordinate(data);
         coordinates.add(coordinate);
@@ -164,6 +185,11 @@ public class Game extends JPanel implements Runnable {
         coordinates.clear();
     }
 
+    /**
+     * Parses cordinate data from a string
+     * @param coordinate
+     * @return a coordinate object
+     */
     private Coordinate parseCoordinate(String coordinate) {
         String[] tokenizedData = coordinate.split(":");
         double x = Double.parseDouble(tokenizedData[0]);
@@ -177,10 +203,6 @@ public class Game extends JPanel implements Runnable {
         return running;
     }
 
-    public void stop() {
-        this.running = false;
-    }
-
     public class InputHandler implements KeyListener {
 
         @Override
@@ -188,20 +210,16 @@ public class Game extends JPanel implements Runnable {
             switch (e.getKeyChar()) {
                 case 'a':
                 case 'j':
-                    //System.out.println("LEFT!");
                     command = TURN_LEFT;
                     break;
                 case 'd':
                 case 'l':
-                    //System.out.println("RIGHT!");
                     command = TURN_RIGHT;
                     break;
-                case 'r': // ska göras med ready knapp i gui
-                    //System.out.println("READY!");
+                case 'r':
                     setReady();
-                    //command = READY;
                     break;
-                case 'e': //esc och window closed istället
+                case 'e':
                     disconnect();
                     System.exit(0);
                     break;

@@ -11,20 +11,24 @@ public class ClientHandlerList {
         this.clientHandlers = new ArrayBlockingQueue<>(capacity);
     }
 
-    public synchronized void broadcast(String msg, ClientHandler clientHandler) {
-        for (ClientHandler u : clientHandlers) {
-            u.printMessage(msg);
+    /**
+     * Sends a message to all clients
+     * @param message the message to be sent
+     */
+    public synchronized void sendToAll(String message) {
+        for (ClientHandler clientHandler : clientHandlers) {
+            clientHandler.printMessage(message);
 
         }
     }
 
-    public synchronized void removeThread(ClientHandler clientHandler) {
+    public synchronized void remove(ClientHandler clientHandler) {
         if (clientHandlers.remove(clientHandler)) {
             System.out.println("The user " + clientHandler.getName() + " quit");
         }
     }
 
-    public synchronized void addThread(ClientHandler clientHandler) {
+    public synchronized void add(ClientHandler clientHandler) {
 
         if (!clientHandlers.contains(clientHandler)) {
             if (clientHandlers.size() == capacity) {
@@ -35,6 +39,9 @@ public class ClientHandlerList {
 
     }
 
+    /**
+     * Doubles the capacity of the queue
+     */
     private void increaseCapacity() {
         capacity *= 2;
         ArrayBlockingQueue<ClientHandler> copy = new ArrayBlockingQueue<>(capacity);

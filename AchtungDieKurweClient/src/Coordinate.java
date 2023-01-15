@@ -2,7 +2,6 @@ import java.awt.*;
 
 public class Coordinate {
 
-
     private static final int SIZE = 5;
     private final double x;
     private final double y;

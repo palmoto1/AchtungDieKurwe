@@ -1,6 +1,12 @@
 public class MessageHandler {
 
 
+    /**
+     * Creates a message in the format <string1>,<string2>,<string2> ...etc.
+     * Allowing messages to be sent in the same format.
+     * @param strings
+     * @return a formatted message
+     */
     public String createMessage(String... strings){
         StringBuilder sb = new StringBuilder();
 

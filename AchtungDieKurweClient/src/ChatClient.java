@@ -1,9 +1,8 @@
 import java.io.*;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 
-public class ClientTCP implements Runnable {
+public class ChatClient implements Runnable {
 
     private static final int DEFAULT_PORT = 2001;
     private static final String DEFAULT_HOST = "127.0.0.1";
@@ -24,21 +23,25 @@ public class ClientTCP implements Runnable {
     private boolean running;
 
 
-    public ClientTCP(String host, int port) {
+    public ChatClient(String host, int port) {
         this.host = host;
         this.port = port;
         running = false;
     }
 
-    public ClientTCP() {
+    public ChatClient() {
         this(DEFAULT_HOST, DEFAULT_PORT);
     }
 
-    public ClientTCP(String host) {
+    public ChatClient(String host) {
         this(host, DEFAULT_PORT);
     }
 
 
+    /**
+     * Enables the client to receive input streams and to write on the output stream.
+     * Starts the thread.
+     */
     public void start() {
         try {
             socket = new Socket(host, port);
@@ -62,6 +65,9 @@ public class ClientTCP implements Runnable {
     }
 
 
+    /**
+     * Continuously listens for messages to read from the input stream.
+     */
     public void run() {
 
         write(user);
@@ -74,11 +80,10 @@ public class ClientTCP implements Runnable {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    break;
                 }
 
             } catch (IOException ioException) {
-                System.err.println("IO error while reading: " + ioException.getMessage());
+                System.out.println(ioException.getMessage());
                 kill();
             }
         }
@@ -94,11 +99,18 @@ public class ClientTCP implements Runnable {
         this.user = user;
     }
 
-    public void write(String text) {
-        out.println(text);
+    /**
+     * Writes text message to the server via the output stream
+     * @param message the message to be sent
+     */
+    public void write(String message) {
+        out.println(message);
         out.flush();
     }
 
+    /**
+     * Kills the thread, and closes sockets and streams
+     */
     public void kill() {
         running = false;
 
@@ -107,11 +119,11 @@ public class ClientTCP implements Runnable {
             in.close();
             socket.close();
         } catch (IOException ioException) {
-            System.err.println("IOException generated: " + ioException);
+            System.err.println(ioException.getMessage());
             ioException.printStackTrace();
         }
 
-        System.exit(1);
+
     }
 }
 

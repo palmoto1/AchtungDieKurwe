@@ -4,9 +4,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-//TODO: fixa tokens så det blir mer konsekvent
-
-public class ClientUDP implements Runnable {
+public class GameClient implements Runnable {
 
     private static final int DEFAULT_PORT = 2000;
     private static final String DEFAULT_HOST = "127.0.0.1";
@@ -19,16 +17,16 @@ public class ClientUDP implements Runnable {
     private boolean running;
 
 
-    public ClientUDP(String host) {
+    public GameClient(String host) {
         this(host, DEFAULT_PORT);
 
     }
 
-    public ClientUDP() {
+    public GameClient() {
         this(DEFAULT_HOST, DEFAULT_PORT);
     }
 
-    public ClientUDP(String host, int port) {
+    public GameClient(String host, int port) {
         this.host = host;
         this.port = port;
 
@@ -40,6 +38,9 @@ public class ClientUDP implements Runnable {
     }
 
 
+    /**
+     * Set up and starting thread
+     */
     public void start() {
         try {
             this.socket = new DatagramSocket();
@@ -49,15 +50,20 @@ public class ClientUDP implements Runnable {
 
             new Thread(this).start();
 
-        } catch (UnknownHostException ex) {
-            System.out.println("Server not found: " + ex.getMessage());
-            ex.printStackTrace();
+        } catch (UnknownHostException e) {
+            System.out.println("Server not found: " + e.getMessage());
+            e.printStackTrace();
         } catch (IOException ioException) {
             System.err.println("IO exception while connecting to server: " + ioException.getMessage());
             ioException.printStackTrace();
         }
     }
 
+
+    /**
+     * Sends a packet via the socket
+     * @param data the content of the packet as a byte array
+     */
     public void send(byte[] data) {
             DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
             try {
@@ -68,6 +74,10 @@ public class ClientUDP implements Runnable {
 
     }
 
+
+    /**
+     * Continuously listens for packets from the server
+     */
     @Override
     public void run() {
 
@@ -88,6 +98,14 @@ public class ClientUDP implements Runnable {
         }
     }
 
+
+    /**
+     * Parses a message and handles according to the message type of the packet.
+     *
+     * @param message the message to be parsed
+     * @param address the host address from where the packet was sent
+     * @param port the port from where the packet was sent
+     */
     private void parse(String message, InetAddress address, int port) {
         String[] tokens = message.split(",");
         String type = tokens[0];
@@ -137,16 +155,4 @@ public class ClientUDP implements Runnable {
         }
     }
 
-    public String getHost() {
-        return host;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void kill() {
-        //running = false;
-        //socket.close();
-    }
 }
