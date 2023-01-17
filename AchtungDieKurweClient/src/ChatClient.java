@@ -75,7 +75,9 @@ public class ChatClient implements Runnable {
         while (running) {
             try {
                 String response = in.readLine();
-                chat.append(response);
+                if(response != null) {
+                    chat.append(response);
+                }
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {

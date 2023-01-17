@@ -1,6 +1,5 @@
 public class AchtungDieKurweServer {
 
-
     public static void main(String[] args) {
         GameServer gameServer;
         ChatServer chatServer;
