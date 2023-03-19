@@ -3,18 +3,21 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class GameClient implements Runnable {
 
-    private static final int DEFAULT_PORT = 2000;
+    private static final int DEFAULT_PORT = 8000 ;
     private static final String DEFAULT_HOST = "127.0.0.1";
     private final String host;
     private final int port;
+    private final BlockingQueue<Packet> packetQueue;
     private DatagramSocket socket;
     private InetAddress address;
     private Game game;
 
-    private boolean running;
+    private volatile boolean running;
 
 
     public GameClient(String host) {
@@ -29,6 +32,8 @@ public class GameClient implements Runnable {
     public GameClient(String host, int port) {
         this.host = host;
         this.port = port;
+
+        packetQueue = new LinkedBlockingQueue<>();
 
 
     }
@@ -49,6 +54,18 @@ public class GameClient implements Runnable {
             running = true;
 
             new Thread(this).start();
+
+            new Thread(() -> {
+                while (running){
+                    try {
+                        Packet packet = packetQueue.take();
+                        parse(packet);
+                    } catch (InterruptedException e){
+                        System.out.println(e.getMessage());
+                    }
+                }
+            }).start();
+
 
         } catch (UnknownHostException e) {
             System.out.println("Server not found: " + e.getMessage());
@@ -92,27 +109,42 @@ public class GameClient implements Runnable {
                 e.printStackTrace();
             }
             String message = new String(packet.getData(), 0, packet.getLength());
-            parse(message, packet.getAddress(), packet.getPort());
+            try {
+                packetQueue.put(new Packet(message, packet.getAddress(), packet.getPort()));
+            } catch (InterruptedException e){
+                System.out.println(e.getMessage());
+            }
 
 
         }
     }
 
+    private static class Packet{
+
+        String message;
+        InetAddress address;
+        int port;
+
+        public Packet(String message, InetAddress address, int port) {
+            this.message = message;
+            this.address = address;
+            this.port = port;
+        }
+    }
+
 
     /**
-     * Parses a message and handles according to the message type of the packet.
+     * Parses a packet and handles according to the message type of the packet.
      *
-     * @param message the message to be parsed
-     * @param address the host address from where the packet was sent
-     * @param port the port from where the packet was sent
+     * @param packet The packet to be parsed
      */
-    private void parse(String message, InetAddress address, int port) {
-        String[] tokens = message.split(",");
+    private void parse(Packet packet) {
+        String[] tokens = packet.message.split(",");
         String type = tokens[0];
         switch (type) {
             case MessageType.CONNECT:
                 String player = tokens[2];
-                System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
+                System.out.println("[" + player + " " + packet.address.getHostAddress() + ":" + packet.port + "] "
                         + " has connected...");
                 int id = Integer.parseInt(tokens[1]);
                 game.handleNewPlayer(player, id);
@@ -122,20 +154,20 @@ public class GameClient implements Runnable {
                 break;
             case MessageType.CONNECTION_DENIED:
                 String error = tokens[1];
-                System.out.println("[" + address.getHostAddress() + ":" + port + "] "
+                System.out.println("[" + packet.address.getHostAddress() + ":" + packet.port + "] "
                         + "got rejected: " + error);
                 game.displayError(error);
                 break;
             case MessageType.DISCONNECT:
                 player = tokens[2];
-                System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
+                System.out.println("[" + player + " " + packet.address.getHostAddress() + ":" + packet.port + "] "
                         + " has disconnected...");
                 id = Integer.parseInt(tokens[1]);
                 game.handleDisconnectedPlayer(player, id);
                 break;
             case MessageType.READY:
                 player = tokens[1];
-                System.out.println("[" + player + " " + address.getHostAddress() + ":" + port + "] "
+                System.out.println("[" + player + " " + packet.address.getHostAddress() + ":" + packet.port + "] "
                         + " is ready...");
                 game.handleReadyPlayer(player);
                 break;

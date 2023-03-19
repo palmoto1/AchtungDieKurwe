@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 public class ChatClient implements Runnable {
 
-    private static final int DEFAULT_PORT = 2001;
+    private static final int DEFAULT_PORT = 8080;
     private static final String DEFAULT_HOST = "127.0.0.1";
 
     private final String host;
