@@ -106,8 +106,10 @@ public class ChatClient implements Runnable {
      * @param message the message to be sent
      */
     public void write(String message) {
-        out.println(message);
-        out.flush();
+        if (message != null) {
+            out.println(message);
+            out.flush();
+        }
     }
 
     /**

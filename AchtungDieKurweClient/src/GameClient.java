@@ -119,6 +119,9 @@ public class GameClient implements Runnable {
         }
     }
 
+    /**
+     * Inner class representing a packet received from the server
+     */
     private static class Packet{
 
         String message;

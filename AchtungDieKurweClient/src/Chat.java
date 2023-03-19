@@ -52,6 +52,8 @@ public class Chat extends JPanel {
     }
 
     public void append(String text){
-        chatArea.append(text + "\n\n");
+        if (text != null) {
+            chatArea.append(text + "\n\n");
+        }
     }
 }
