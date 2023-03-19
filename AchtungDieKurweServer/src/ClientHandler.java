@@ -12,6 +12,7 @@ public class ClientHandler implements Runnable {
     private final Socket socket;
     private final ChatServer server;
     private String name;
+    private long id;
     private PrintWriter out;
     private BufferedReader in;
 
@@ -19,7 +20,7 @@ public class ClientHandler implements Runnable {
         this.socket = socket;
         this.server = server;
         thread = new Thread(this);
-        start();
+        id = -1;
     }
 
     /**
@@ -36,6 +37,7 @@ public class ClientHandler implements Runnable {
             out = new PrintWriter(outputStreamWriter, true);
 
             name = in.readLine();
+            System.out.println("The user " + name + " connected to chat server");
         } catch (SocketException socketException) {
             System.out.println("User connection lost!");
         } catch (IOException ioException) {
@@ -52,13 +54,11 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-
-
             String clientMessage = "";
 
             while (clientMessage != null) {
                 clientMessage = in.readLine();
-                server.broadcast(name + ": " + clientMessage);
+                server.addMessage(name + ": " + clientMessage);
                 try {
                 Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -76,13 +76,20 @@ public class ClientHandler implements Runnable {
         return name;
     }
 
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
     /**
      * Writes a message to the client via the output stream
      * @param message the message to be sent
      */
     public void printMessage(String message) {
         out.println(message);
-        out.flush();
     }
 
     /**
@@ -91,8 +98,8 @@ public class ClientHandler implements Runnable {
      */
     public void dispose() {
         try {
-            out.close();
-            in.close();
+            if (out != null) out.close();
+            if (in != null) in.close();
             socket.close();
         } catch (SocketException socketException) {
             System.out.println("User connection lost!");
@@ -100,7 +107,7 @@ public class ClientHandler implements Runnable {
             System.err.println("User error: " + ioException.getMessage());
             ioException.printStackTrace();
         }
-        server.removeClient(this);
+        server.removeClient(id);
     }
 
     @Override

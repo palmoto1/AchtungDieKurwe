@@ -1,6 +1,9 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**
@@ -10,20 +13,21 @@ import java.net.Socket;
 public class ChatServer implements Runnable {
 
 
-    private static final int DEFAULT_PORT = 2001;
+    private final static int DEFAULT_PORT = 8080;
+    private final static int MAX_CLIENTS = 6;
 
     private final Thread thread;
     private final int port;
-
-    private final ClientHandlerList clientHandlerList;
-
-    private boolean running;
+    private final ConcurrentHashMap<Long, ClientHandler> connectedClients;
+    private final BlockingQueue<String> messageQueue;
+    private volatile boolean running;
 
 
     public ChatServer(int port) {
         this.port = port;
         thread = new Thread(this);
-        clientHandlerList = new ClientHandlerList();
+        connectedClients = new ConcurrentHashMap<>(MAX_CLIENTS);
+        messageQueue = new LinkedBlockingQueue<>();
     }
 
     public ChatServer() {
@@ -32,11 +36,23 @@ public class ChatServer implements Runnable {
 
 
     /**
-     * Starts the thread
+     * Starts the main thread and another thread consuming messages from the message queue
      */
     public void start() {
         thread.start();
         running = true;
+
+        new Thread(() -> {
+            while(running){
+                try {
+                    String message = messageQueue.take();
+                    broadcast(message);
+                }catch (InterruptedException e){
+                    System.out.println(e.getMessage());
+                    break;
+                }
+            }
+        }).start();
     }
 
 
@@ -51,7 +67,14 @@ public class ChatServer implements Runnable {
 
             while (running) {
                 Socket socket = serverSocket.accept();
-                addClient(new ClientHandler(socket, this));
+                long id = System.currentTimeMillis();
+                ClientHandler client = new ClientHandler(socket, this);
+                if (addClient(id, client)){
+                    client.start();
+                }
+                else {
+                    client.dispose();
+                }
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -65,21 +88,53 @@ public class ChatServer implements Runnable {
         }
     }
 
+    /**
+     * Adds a message to the message queue
+     * @param message the message to put in the queue
+     */
+    public void addMessage(String message){
+        if (message != null) {
+            try {
+                messageQueue.put(message);
+            } catch (InterruptedException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
 
     /**
      * Broadcasts a message to all clients
      * @param message the message to be sent
      */
-    public void broadcast(String message) {
-        clientHandlerList.sendToAll(message);
+    private void broadcast(String message) {
+        connectedClients.forEach(1, (id, client) -> client.printMessage(message));
     }
 
-    public void removeClient(ClientHandler clientHandler) {
-        clientHandlerList.remove(clientHandler);
+
+    /**
+     * Removes a client from the server
+     * @param id the client id
+     */
+    public void removeClient(long id) {
+        ClientHandler removed = connectedClients.remove(id);
+        if (removed != null){
+            System.out.println("The user " + removed.getName() + " quit");
+
+        }
     }
 
-    public void addClient(ClientHandler clientHandler) {
-
-        clientHandlerList.add(clientHandler);
+    /**
+     * Adds a client as long as the server is not full
+     * @param id the id of the client
+     * @param clientHandler the client
+     * @return true or false if the client was added or not
+     */
+    public boolean addClient(long id, ClientHandler clientHandler) {
+        if (connectedClients.size() == MAX_CLIENTS){
+            return false;
+        }
+        clientHandler.setId(id);
+        connectedClients.putIfAbsent(id, clientHandler);
+        return true;
     }
 }
